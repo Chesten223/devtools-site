@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chesten's Dev Tools — AI-powered tools for developers</title>
+  <meta name="description" content="Free, open-source developer tools powered by AI. Code review, V2EX assistant, and more.">
+  <style>
+    :root {
+      --purple: #7c3aed;
+      --purple-light: #a78bfa;
+      --bg: #0a0a0a;
+      --bg-card: #111827;
+      --text: #e5e7eb;
+      --text-dim: #9ca3af;
+      --border: #1f2937;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: var(--purple-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .hero {
+      text-align: center;
+      padding: 80px 20px 40px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #7c3aed, #a78bfa, #c4b5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-dim);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .tools {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+      display: grid;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--purple); }
+    .card h2 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card .tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: rgba(124,58,237,0.15);
+      color: var(--purple-light);
+      font-weight: 500;
+    }
+    .card p { color: var(--text-dim); margin-bottom: 16px; }
+    .card ul {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+    .card li {
+      padding: 4px 0;
+      color: var(--text-dim);
+      font-size: 14px;
+    }
+    .card li::before { content: "✓ "; color: #22c55e; }
+
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+    }
+    .btn:hover { transform: translateY(-1px); text-decoration: none; }
+    .btn-primary {
+      background: var(--purple);
+      color: white;
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-dim);
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+      margin-top: 60px;
+    }
+
+    .install {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: monospace;
+      font-size: 13px;
+      color: #e6edf3;
+      margin: 12px 0;
+      overflow-x: auto;
+    }
+    .install .comment { color: #8b949e; }
+    .install .cmd { color: #79c0ff; }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 32px; }
+      .card { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <h1>Chesten's Dev Tools</h1>
+    <p>Free, open-source AI-powered tools for developers. Ship faster, code better.</p>
+  </div>
+
+  <div class="tools">
+
+    <!-- ai-review-cli -->
+    <div class="card">
+      <h2>
+        <span>⚡</span> ai-review
+        <span class="tag">CLI</span>
+        <span class="tag">Open Source</span>
+      </h2>
+      <p>AI-powered code review in your terminal. Review diffs, block bad commits, catch bugs before they ship.</p>
+      <ul>
+        <li>Git diff review — check staged changes in seconds</li>
+        <li>Pre-commit hook — auto-block commits with errors</li>
+        <li>Works with any OpenAI-compatible API</li>
+        <li>Zero config — set OPENAI_API_KEY and go</li>
+        <li>Chinese output support (--zh)</li>
+      </ul>
+      <div class="install">
+        <span class="comment"># Review staged changes</span><br>
+        <span class="cmd">npx ai-review-cli --diff</span><br><br>
+        <span class="comment"># Install as git hook</span><br>
+        <span class="cmd">npx ai-review-cli --hook install</span>
+      </div>
+      <div class="btn-group">
+        <a href="https://github.com/Chesten223/ai-review-cli" class="btn btn-primary">⭐ GitHub</a>
+        <a href="https://github.com/Chesten223/ai-review-cli#readme" class="btn btn-outline">Docs</a>
+      </div>
+    </div>
+
+    <!-- v2ex-ai-ext -->
+    <div class="card">
+      <h2>
+        <span>🤖</span> V2EX AI 助手
+        <span class="tag">Chrome Ext</span>
+        <span class="tag">Open Source</span>
+      </h2>
+      <p>AI assistant for V2EX — summarize topics, generate replies, analyze users, all in one click.</p>
+      <ul>
+        <li>📋 Summarize — core issue + key points + consensus</li>
+        <li>💬 Generate replies — natural, human-like, 3-5 sentences</li>
+        <li>⚡ TL;DR — one-line summary for long posts</li>
+        <li>👤 User analysis — tech stack, level, intent</li>
+        <li>Privacy-first — API key stays in your browser</li>
+      </ul>
+      <div class="install">
+        <span class="comment"># Install from source</span><br>
+        <span class="cmd">git clone https://github.com/Chesten223/v2ex-ai-ext.git</span><br>
+        <span class="comment"># Chrome → Extensions → Developer mode → Load unpacked</span>
+      </div>
+      <div class="btn-group">
+        <a href="https://github.com/Chesten223/v2ex-ai-ext" class="btn btn-primary">⭐ GitHub</a>
+        <a href="https://github.com/Chesten223/v2ex-ai-ext#readme" class="btn btn-outline">Docs</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <p>Built by <a href="https://github.com/Chesten223">Chesten</a> · MIT License · Powered by AI</p>
+    <p style="margin-top:8px">Contact: chesten@163.com</p>
+  </div>
+
+</body>
+</html>
