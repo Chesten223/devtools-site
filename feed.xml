@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>Developer Tools Hub — New Tools</title>
+<link>https://devtools-site-cos.pages.dev</link>
+<description>Free online developer tools by Chesten. New tools added regularly.</description>
+<lastBuildDate>Wed, 10 Jun 2026 02:05:13 GMT</lastBuildDate>
+<atom:link href="https://devtools-site-cos.pages.dev/feed.xml" rel="self" type="application/rss+xml"/>
+<language>en</language>
+<managingEditor>chesten@163.com (Chesten)</managingEditor>
+<webMaster>chesten@163.com (Chesten)</webMaster>
+<item><title>API Tester — Free Online REST API Testing Tool</title><link>https://api-tester-7jm.pages.dev</link><description>Test REST APIs with method selector, headers, auth, and response viewer. Like a mini Postman in your browser.</description><pubDate>Wed, 10 Jun 2026 02:05:13 GMT</pubDate><guid>https://api-tester-7jm.pages.dev</guid></item>
+<item><title>Favicon Generator — Free Online Favicon Maker</title><link>https://favicon-gen-78e.pages.dev</link><description>Generate favicons from text or emoji. Download as PNG, ICO, or ZIP. 20 preset styles included.</description><pubDate>Wed, 10 Jun 2026 02:05:13 GMT</pubDate><guid>https://favicon-gen-78e.pages.dev</guid></item>
+<item><title>CSS Grid Generator — Visual Grid Layout Builder</title><link>https://css-grid.pages.dev</link><description>Build CSS Grid layouts visually. Click to merge cells, export CSS + HTML code. Includes 6 presets.</description><pubDate>Wed, 10 Jun 2026 02:05:13 GMT</pubDate><guid>https://css-grid.pages.dev</guid></item>
+<item><title>SVG Path Editor — Visual SVG Path Tool</title><link>https://svg-editor-654.pages.dev</link><description>Edit SVG paths with drag-and-drop control points. Supports all path commands. 6 preset shapes.</description><pubDate>Wed, 10 Jun 2026 02:05:13 GMT</pubDate><guid>https://svg-editor-654.pages.dev</guid></item>
+<item><title>Markdown to HTML Converter</title><link>https://md2html-alc.pages.dev</link><description>Convert Markdown to HTML with live preview. 5 templates included. Download as HTML file.</description><pubDate>Wed, 10 Jun 2026 02:05:13 GMT</pubDate><guid>https://md2html-alc.pages.dev</guid></item>
+<item><title>GitHub README Generator</title><link>https://readme-gen.pages.dev</link><description>Generate beautiful GitHub READMEs with form-based editor. 6 templates: CLI, Web App, Library, Extension, API.</description><pubDate>Wed, 10 Jun 2026 02:05:13 GMT</pubDate><guid>https://readme-gen.pages.dev</guid></item>
+<item><title>Open Graph Preview — OG Meta Tag Tester</title><link>https://og-preview-dl3.pages.dev</link><description>Preview and test OG meta tags. See Facebook, Twitter, LinkedIn card previews. SEO suggestions.</description><pubDate>Wed, 10 Jun 2026 02:05:13 GMT</pubDate><guid>https://og-preview-dl3.pages.dev</guid></item>
+<item><title>HTTP Status Codes — Complete Reference</title><link>https://http-codes.pages.dev</link><description>Complete HTTP status code reference with descriptions, causes, and fixes. Live search and category filtering.</description><pubDate>Wed, 10 Jun 2026 02:05:13 GMT</pubDate><guid>https://http-codes.pages.dev</guid></item>
+</channel></rss>
