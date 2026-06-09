@@ -1,713 +1,937 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chesten's Dev Tools — AI-powered tools for developers</title>
-  <meta name="description" content="Free, open-source developer tools powered by AI. Code review, V2EX assistant, and more.">
+  <title>100+ Free Developer Tools — Chesten</title>
+  <meta name="description" content="100+ free browser-based developer tools. No sign-up, no ads, no tracking. JSON, CSS, Regex, SEO, Security, and more.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
     :root {
-      --purple: #7c3aed;
-      --purple-light: #a78bfa;
-      --bg: #0a0a0a;
-      --bg-card: #111827;
-      --text: #e5e7eb;
-      --text-dim: #9ca3af;
-      --border: #1f2937;
+      --bg: #050505;
+      --bg-elevated: #0a0a0a;
+      --bg-card: #0c0c0c;
+      --lime: #BFFF00;
+      --lime-dim: rgba(191, 255, 0, 0.12);
+      --lime-glow: rgba(191, 255, 0, 0.25);
+      --white: #f0f0f0;
+      --gray: #666;
+      --gray-light: #999;
+      --gray-dark: #222;
+      --border: #1a1a1a;
+      --mono: 'Space Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      font-family: var(--sans);
       background: var(--bg);
-      color: var(--text);
+      color: var(--white);
       line-height: 1.6;
-    }
-    a { color: var(--purple-light); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    .hero {
-      text-align: center;
-      padding: 80px 20px 40px;
-      max-width: 720px;
-      margin: 0 auto;
-    }
-    .hero h1 {
-      font-size: 48px;
-      font-weight: 800;
-      background: linear-gradient(135deg, #7c3aed, #a78bfa, #c4b5fd);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 16px;
-    }
-    .hero p {
-      font-size: 18px;
-      color: var(--text-dim);
-      max-width: 500px;
-      margin: 0 auto;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
 
-    .tools {
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 0 20px;
-      display: grid;
-      gap: 24px;
-    }
+    a { color: inherit; text-decoration: none; }
 
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px;
-      transition: border-color 0.2s;
-    }
-    .card:hover { border-color: var(--purple); }
-    .card h2 {
-      font-size: 24px;
-      margin-bottom: 8px;
+    /* ─── NAV ─── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: space-between;
+      padding: 16px 32px;
+      background: rgba(5,5,5,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
     }
-    .card .tag {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 99px;
-      background: rgba(124,58,237,0.15);
-      color: var(--purple-light);
+    .nav-logo {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: -0.5px;
+      color: var(--lime);
+    }
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      font-size: 13px;
       font-weight: 500;
+      color: var(--gray-light);
     }
-    .card p { color: var(--text-dim); margin-bottom: 16px; }
-    .card ul {
-      list-style: none;
-      margin-bottom: 20px;
+    .nav-links a:hover { color: var(--white); }
+    .nav-links .nav-cta {
+      background: var(--lime);
+      color: #050505;
+      padding: 6px 14px;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
-    .card li {
-      padding: 4px 0;
-      color: var(--text-dim);
-      font-size: 14px;
-    }
-    .card li::before { content: "✓ "; color: #22c55e; }
+    .nav-links .nav-cta:hover { opacity: 0.85; }
 
-    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn {
-      display: inline-flex;
+    /* ─── HERO ─── */
+    .hero {
+      position: relative;
+      padding: 100px 32px 60px;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: end;
+    }
+    .hero-left {}
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--lime);
+      margin-bottom: 20px;
+      display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
+      gap: 8px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 24px;
+      height: 2px;
+      background: var(--lime);
+    }
+    .hero-title {
+      font-family: var(--mono);
+      font-size: clamp(42px, 7vw, 80px);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -2px;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+    .hero-title .lime { color: var(--lime); }
+    .hero-underline {
+      display: block;
+      width: 100%;
+      height: 4px;
+      background: var(--lime);
+      box-shadow: 0 0 30px var(--lime-glow), 0 0 60px rgba(191,255,0,0.1);
+      margin-top: 8px;
+      max-width: 380px;
+    }
+    .hero-sub {
+      font-size: 18px;
+      color: var(--gray-light);
+      margin-top: 20px;
+      max-width: 440px;
+      line-height: 1.5;
+      font-weight: 300;
+    }
+    .hero-sub .typed-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: var(--lime);
+      margin-left: 2px;
+      animation: blink 0.8s step-end infinite;
+      vertical-align: text-bottom;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .hero-right {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-bottom: 10px;
+    }
+    .stat-bar {
+      display: flex;
+      gap: 2px;
+    }
+    .stat-item {
+      flex: 1;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .stat-item:first-child { border-left: 2px solid var(--lime); }
+    .stat-number {
+      font-family: var(--mono);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--lime);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--gray);
+      margin-top: 6px;
+    }
+
+    /* ─── SEARCH ─── */
+    .search-section {
+      max-width: 1200px;
+      margin: 0 auto 20px;
+      padding: 0 32px;
+    }
+    .search-wrap {
+      position: relative;
+      border: 2px solid var(--border);
+      transition: border-color 0.2s;
+    }
+    .search-wrap:focus-within { border-color: var(--lime); }
+    .search-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 18px;
+      font-family: var(--mono);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--bg-elevated);
+      border: none;
+      outline: none;
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 15px;
+      padding: 18px 20px 18px 52px;
+    }
+    .search-input::placeholder { color: var(--gray-dark); }
+    .search-count {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--gray);
+    }
+
+    /* ─── CATEGORY NAV ─── */
+    .cat-nav {
+      max-width: 1200px;
+      margin: 0 auto 40px;
+      padding: 0 32px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .cat-btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--gray-light);
       cursor: pointer;
       transition: all 0.15s;
-      border: none;
     }
-    .btn:hover { transform: translateY(-1px); text-decoration: none; }
-    .btn-primary {
-      background: var(--purple);
-      color: white;
-    }
-    .btn-outline {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
+    .cat-btn:hover, .cat-btn.active {
+      border-color: var(--lime);
+      color: var(--lime);
+      background: var(--lime-dim);
     }
 
-    .footer {
+    /* ─── TOOLS GRID ─── */
+    .tools-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+    .tools-grid {
+      columns: 3;
+      column-gap: 16px;
+    }
+    .tool-card {
+      break-inside: avoid;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      display: inline-block;
+      width: 100%;
+    }
+    .tool-card:hover {
+      border-color: var(--lime);
+      box-shadow: 0 0 20px rgba(191,255,0,0.08), inset 0 0 20px rgba(191,255,0,0.03);
+    }
+    .tool-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .tool-name {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.3;
+    }
+    .tool-name a:hover { color: var(--lime); }
+    .tool-tag {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      color: var(--gray);
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+    .tool-desc {
+      font-size: 13px;
+      color: var(--gray-light);
+      line-height: 1.4;
+      font-weight: 300;
+    }
+    .tool-cat-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--lime);
+      margin-top: 12px;
+      display: block;
+    }
+
+    .no-results {
       text-align: center;
-      padding: 40px 20px;
-      color: var(--text-dim);
-      font-size: 13px;
-      border-top: 1px solid var(--border);
-      margin-top: 60px;
+      padding: 80px 20px;
+      font-family: var(--mono);
+      color: var(--gray);
+      font-size: 14px;
     }
 
-    .install {
-      background: #0d1117;
+    /* ─── SECTION DIVIDER ─── */
+    .section-divider {
+      max-width: 1200px;
+      margin: 80px auto 40px;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .section-divider h2 {
+      font-family: var(--mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--lime);
+      white-space: nowrap;
+    }
+    .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ─── FEATURED PRODUCTS ─── */
+    .products-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .product-card {
+      background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-family: monospace;
-      font-size: 13px;
-      color: #e6edf3;
-      margin: 12px 0;
-      overflow-x: auto;
+      padding: 32px 24px;
+      position: relative;
+      overflow: hidden;
     }
-    .install .comment { color: #8b949e; }
-    .install .cmd { color: #79c0ff; }
+    .product-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--lime);
+    }
+    .product-badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--bg);
+      background: var(--lime);
+      padding: 4px 10px;
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+    .product-name {
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .product-price {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--lime);
+      margin-bottom: 12px;
+    }
+    .product-desc {
+      font-size: 14px;
+      color: var(--gray-light);
+      font-weight: 300;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .product-cta {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 10px 20px;
+      border: 2px solid var(--lime);
+      color: var(--lime);
+      transition: all 0.15s;
+    }
+    .product-cta:hover {
+      background: var(--lime);
+      color: var(--bg);
+    }
 
-    @media (max-width: 640px) {
-      .hero h1 { font-size: 32px; }
-      .card { padding: 24px; }
+    /* ─── EXTENSIONS ─── */
+    .ext-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .ext-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 24px 20px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .ext-card:hover { border-color: var(--lime); }
+    .ext-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .ext-name {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .ext-desc {
+      font-size: 12px;
+      color: var(--gray);
+      font-weight: 300;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+    .ext-badge {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      color: var(--gray-light);
+      display: inline-block;
+    }
+    .ext-badge.free { border-color: var(--lime); color: var(--lime); }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      margin-top: 100px;
+      border-top: 1px solid var(--border);
+      padding: 40px 32px;
+    }
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-left {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--gray);
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+    .footer-links a {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--gray-light);
+      transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--lime); }
+
+    /* ─── MOBILE ─── */
+    @media (max-width: 1024px) {
+      .tools-grid { columns: 2; }
+      .ext-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 60px 20px 40px;
+        gap: 30px;
+      }
+      .hero-right { padding-bottom: 0; }
+      .stat-bar { flex-wrap: wrap; }
+      .stat-item { min-width: calc(50% - 2px); }
+      .tools-grid { columns: 1; }
+      .products-grid { grid-template-columns: 1fr; }
+      .ext-grid { grid-template-columns: 1fr 1fr; }
+      .nav { padding: 12px 20px; }
+      .nav-links { gap: 12px; font-size: 12px; }
+      .cat-nav { padding: 0 20px; }
+      .tools-section { padding: 0 20px; }
+      .search-section { padding: 0 20px; }
+      .section-divider { padding: 0 20px; }
+      .products-grid { padding: 0 20px; }
+      .ext-grid { padding: 0 20px; }
+      .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .stat-item { min-width: calc(50% - 2px); padding: 14px 10px; }
+      .stat-number { font-size: 24px; }
+      .ext-grid { grid-template-columns: 1fr; }
+      .nav-links .hide-mobile { display: none; }
     }
   </style>
 </head>
 <body>
 
-  <div class="hero">
-    <h1>Chesten's Dev Tools</h1>
-    <p>Free, open-source AI-powered tools for developers. Ship faster, code better. 45+ free tools.</p>
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-logo">CHESTEN.DEV</div>
+    <div class="nav-links">
+      <a href="#tools" class="hide-mobile">Tools</a>
+      <a href="#products" class="hide-mobile">Products</a>
+      <a href="#extensions" class="hide-mobile">Extensions</a>
+      <a href="https://github.com/Chesten223" target="_blank" class="hide-mobile">GitHub</a>
+      <a href="#products" class="nav-cta">Get All Tools</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Free &middot; Open Source &middot; No Ads</div>
+      <h1 class="hero-title">100+ FREE<br><span class="lime">DEV TOOLS</span></h1>
+      <div class="hero-underline"></div>
+      <p class="hero-sub"><span id="typed-text"></span><span class="typed-cursor"></span></p>
+    </div>
+    <div class="hero-right">
+      <div class="stat-bar">
+        <div class="stat-item">
+          <div class="stat-number">100+</div>
+          <div class="stat-label">Tools</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">98</div>
+          <div class="stat-label">Deployed</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">8</div>
+          <div class="stat-label">Extensions</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">0</div>
+          <div class="stat-label">Ads</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEARCH -->
+  <div class="search-section" id="tools">
+    <div class="search-wrap">
+      <span class="search-icon">&gt;_</span>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search tools by name, category, or keyword..." autocomplete="off">
+      <span class="search-count" id="searchCount"></span>
+    </div>
   </div>
 
-  <div class="tools">
-
-    <!-- ai-review-cli -->
-    <div class="card">
-      <h2>
-        <span>⚡</span> ai-review
-        <span class="tag">CLI</span>
-        <span class="tag">Open Source</span>
-      </h2>
-      <p>AI-powered code review in your terminal. Review diffs, block bad commits, catch bugs before they ship.</p>
-      <ul>
-        <li>Git diff review — check staged changes in seconds</li>
-        <li>Pre-commit hook — auto-block commits with errors</li>
-        <li>Works with any OpenAI-compatible API</li>
-        <li>Zero config — set OPENAI_API_KEY and go</li>
-        <li>Chinese output support (--zh)</li>
-      </ul>
-      <div class="install">
-        <span class="comment"># Review staged changes</span><br>
-        <span class="cmd">npx ai-review-cli --diff</span><br><br>
-        <span class="comment"># Install as git hook</span><br>
-        <span class="cmd">npx ai-review-cli --hook install</span>
-      </div>
-      <div class="btn-group">
-        <a href="https://github.com/Chesten223/ai-review-cli" class="btn btn-primary">⭐ GitHub</a>
-        <a href="https://github.com/Chesten223/ai-review-cli#readme" class="btn btn-outline">Docs</a>
-      </div>
-    </div>
-
-    <!-- v2ex-ai-ext -->
-    <div class="card">
-      <h2>
-        <span>🤖</span> V2EX AI 助手
-        <span class="tag">Chrome Ext</span>
-        <span class="tag">Open Source</span>
-      </h2>
-      <p>AI assistant for V2EX — summarize topics, generate replies, analyze users, all in one click.</p>
-      <ul>
-        <li>📋 Summarize — core issue + key points + consensus</li>
-        <li>💬 Generate replies — natural, human-like, 3-5 sentences</li>
-        <li>⚡ TL;DR — one-line summary for long posts</li>
-        <li>👤 User analysis — tech stack, level, intent</li>
-        <li>Privacy-first — API key stays in your browser</li>
-      </ul>
-      <div class="install">
-        <span class="comment"># Install from source</span><br>
-        <span class="cmd">git clone https://github.com/Chesten223/v2ex-ai-ext.git</span><br>
-        <span class="comment"># Chrome → Extensions → Developer mode → Load unpacked</span>
-      </div>
-      <div class="btn-group">
-        <a href="https://github.com/Chesten223/v2ex-ai-ext" class="btn btn-primary">⭐ GitHub</a>
-        <a href="https://github.com/Chesten223/v2ex-ai-ext#readme" class="btn btn-outline">Docs</a>
-      </div>
-    </div>
-
-    <!-- ResellBuddy -->
-    <div class="card">
-      <h2>
-        <span>📦</span> ResellBuddy
-        <span class="tag">Chrome Ext</span>
-        <span class="tag">Free Tier</span>
-      </h2>
-      <p>Automate Poshmark & Mercari reselling: share, like, follow on autopilot. Save 3+ hours daily.</p>
-      <ul>
-        <li>🔄 Auto-share listings to Posh Parties</li>
-        <li>❤️ Auto-like items in feed and search</li>
-        <li>👤 Auto-follow users in your niche</li>
-        <li>⏰ Smart scheduling with time windows</li>
-        <li>Free tier: 50 actions/day</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://github.com/Chesten223/resell-buddy" class="btn btn-primary">⭐ GitHub</a>
-        <a href="https://resellbuddy.pages.dev" class="btn btn-outline">Landing Page</a>
-      </div>
-    </div>
-
-    <!-- JSON Hero -->
-    <div class="card">
-      <h2>
-        <span>🔮</span> JSON Hero
-        <span class="tag">Chrome Ext</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Beautiful JSON viewer for Chrome. Syntax highlighting, tree view, search, zero ads, zero tracking.</p>
-      <ul>
-        <li>🎨 Gorgeous dark theme syntax highlighting</li>
-        <li>🌳 Interactive tree view with type badges</li>
-        <li>🔍 Instant search across keys and values</li>
-        <li>📊 Stats: keys, depth, file size</li>
-        <li>📊 CSV export · Schema gen · YAML conversion</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://github.com/Chesten223/json-hero" class="btn btn-primary">⭐ GitHub</a>
-        <a href="https://json-hero-8fu.pages.dev" class="btn btn-outline">Landing Page</a>
-      </div>
-    </div>
-
-    <!-- Listing Analyzer -->
-    <div class="card">
-      <h2>
-        <span>📊</span> Listing Analyzer
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Free AI-powered Poshmark listing analysis. Paste a URL, get optimization suggestions to sell faster.</p>
-      <ul>
-        <li>📝 Title analysis — brand, size, color, condition</li>
-        <li>📄 Description scoring — measurements, fabric, details</li>
-        <li>💰 Pricing tips — competitive pricing strategy</li>
-        <li>🔍 SEO suggestions — hashtags, keywords, visibility</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://listing-analyzer.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/listing-analyzer" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- DevTool Box -->
-    <div class="card">
-      <h2>
-        <span>🛠️</span> DevTool Box
-        <span class="tag">Chrome Ext</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>4 essential developer tools in one extension: color picker, font detector, CSS inspector, element ruler. Zero bloat.</p>
-      <ul>
-        <li>🎨 Color Picker — HEX/RGB/HSL from any page + history</li>
-        <li>🔤 Font Detector — hover to see font family, size, weight</li>
-        <li>📏 Element Ruler — measure any element's dimensions</li>
-        <li>🔍 CSS Inspector — full computed styles for any element</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://github.com/Chesten223/devtool-box" class="btn btn-primary">⭐ GitHub</a>
-        <a href="https://devtool-box.pages.dev" class="btn btn-outline">Landing Page</a>
-      </div>
-    </div>
-
-    <!-- SEO Booster -->
-    <div class="card">
-      <h2>
-        <span>🔍</span> SEO Booster
-        <span class="tag">Chrome Ext</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>View meta tags, preview social sharing cards, inspect heading structure, and edit SEO tags live.</p>
-      <ul>
-        <li>🏷️ Meta tag viewer — all tags, color-coded by importance</li>
-        <li>📱 OG Preview — see how pages look on Facebook/Twitter</li>
-        <li>📋 Heading structure analysis</li>
-        <li>✏️ Live SEO tag editing</li>
-        <li>📊 SEO score and suggestions</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://github.com/Chesten223/seo-booster" class="btn btn-primary">⭐ GitHub</a>
-        <a href="https://seo-booster.pages.dev" class="btn btn-outline">Landing Page</a>
-      </div>
-    </div>
-
-    <!-- Code Minifier -->
-    <div class="card">
-      <h2>
-        <span>🗜️</span> Code Minifier
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Minify JavaScript, CSS, HTML with size statistics. Reduce file sizes and improve loading times.</p>
-      <ul>
-        <li>🎯 Advanced JavaScript minification with tree shaking</li>
-        <li>🎨 CSS optimization and duplicate removal</li>
-        <li>📄 HTML minification and attribute cleaning</li>
-        <li>📊 Real-time size reduction statistics</li>
-        <li>🔄 Batch processing for multiple files</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://code-minifier-d8f.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/code-minifier" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- QR Code Generator -->
-    <div class="card">
-      <h2>
-        <span>📱</span> QR Generator
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Generate QR codes with custom colors and sizes. Create QR codes for URLs, text, and contact info.</p>
-      <ul>
-        <li>🎨 Custom colors and sizes for branding</li>
-        <li>📱 High-quality vector and PNG exports</li>
-        <li>🔗 Dynamic QR codes for URL tracking</li>
-        <li>📄 Batch generation for multiple QR codes</li>
-        <li>💾 Download in multiple formats (PNG, SVG, JPEG)</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://qr-gen-9du.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/qr-gen" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- Emoji Search -->
-    <div class="card">
-      <h2>
-        <span>😊</span> Emoji Search
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Find and copy emojis with live search. Search by keywords, categories, or emoji names.</p>
-      <ul>
-        <li>🔍 Live search with instant results</li>
-        <li>📂 Browse by categories (smileys, food, animals, etc.)</li>
-        <li>📋 Copy emoji with one click</li>
-        <li>🔗 Quick copy with keyboard shortcuts</li>
-        <li>📝 Copy with Unicode and shortcodes</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://emoji-search.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/emoji-search" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-    <!-- OG Preview -->
-    <div class="card">
-      <h2>
-        <span>🖼️</span> OG Preview
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Test and preview Open Graph meta tags. See how your content looks when shared on social media.</p>
-      <ul>
-        <li>🔍 Real-time meta tag validation</li>
-        <li>📱 Multi-platform preview (Facebook, Twitter, LinkedIn)</li>
-        <li>🎨 Visual preview cards for all major platforms</li>
-        <li>🔧 Generate missing meta tags automatically</li>
-        <li>💾 Export configuration for easy deployment</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://og-preview-dl3.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/og-preview" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- HTTP Status Codes -->
-    <div class="card">
-      <h2>
-        <span>📡</span> HTTP Status Codes
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Complete HTTP status code reference with fixes. Understand and troubleshoot HTTP errors effectively.</p>
-      <ul>
-        <li>📚 Comprehensive status code database</li>
-        <li>🔧 Common fixes and troubleshooting guides</li>
-        <li>📊 Request/response examples for each code</li>
-        <li>🔍 Search and filter by category</li>
-        <li>💡 Best practices for proper error handling</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://http-codes.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/http-codes" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- HTML Entities -->
-    <div class="card">
-      <h2>
-        <span>🔤</span> HTML Entities
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Encode/decode HTML entities with reference table. Handle special characters and symbols easily.</p>
-      <ul>
-        <li>🔄 Encode/decode with one click</li>
-        <li>📋 Complete character entity reference</li>
-        <li>🔍 Search entities by name or code</li>
-        <li>📊 Copy entities in multiple formats</li>
-        <li>💾 Bulk processing for multiple strings</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://html-entities-3au.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/html-entities" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- JSON Path -->
-    <div class="card">
-      <h2>
-        <span>🔮</span> JSON Path
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Query JSON with path expressions. Extract and manipulate JSON data using powerful path queries.</p>
-      <ul>
-        <li>🔍 Advanced path expression support</li>
-        <li>📊 Real-time query results</li>
-        <li>🎯 Multiple path syntax support</li>
-        <li>💾 Query history and favorites</li>
-        <li>📤 Export results in multiple formats</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://json-path.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/json-path" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- URL Shortener -->
-    <div class="card">
-      <h2>
-        <span>🔗</span> URL Shortener
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Shorten URLs with analytics and customization. Create clean, trackable links for your projects.</p>
-      <ul>
-        <li>📊 Click analytics and tracking</li>
-        <li>🎨 Custom short codes and aliases</li>
-        <li>📱 Mobile-friendly interface</li>
-        <li>🔒 Secure and reliable links</li>
-        <li>💾 Export analytics and history</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://url-shortener-52z.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/url-shortener" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- Link Checker -->
-    <div class="card">
-      <h2>
-        <span>🔗</span> Link Checker
-        <span class="tag">Chrome Ext</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Find broken links on any webpage. Export CSV reports for comprehensive link analysis.</p>
-      <ul>
-        <li>🔍 Scan entire websites for broken links</li>
-        <li>📊 Export comprehensive CSV reports</li>
-        <li>⚡ Real-time link validation</li>
-        <li>🎯 Customizable scan depth and scope</li>
-        <li>💾 Save scan results and history</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://github.com/Chesten223/link-checker" class="btn btn-primary">⭐ GitHub</a>
-        <a href="https://link-checker-site.pages.dev" class="btn btn-outline">Try Free</a>
-      </div>
-    </div>
-
-    <!-- Cookie Editor -->
-    <div class="card">
-      <h2>
-        <span>🍪</span> Cookie Editor
-        <span class="tag">Chrome Ext</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>View, edit, and manage cookies. Powerful dev tool for web development and testing.</p>
-      <ul>
-        <li>👀 View all cookies with detailed information</li>
-        <li>✏️ Edit cookie values and attributes</li>
-        <li>➕ Add new cookies manually</li>
-        <li>🗑️ Delete unwanted cookies</li>
-        <li>📤 Import/export cookie configurations</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://github.com/Chesten223/cookie-editor" class="btn btn-primary">⭐ GitHub</a>
-        <a href="https://cookie-editor-site.pages.dev" class="btn btn-outline">Try Free</a>
-      </div>
-    </div>
-
-    <!-- Speed Analyzer -->
-    <div class="card">
-      <h2>
-        <span>⚡</span> Speed Analyzer
-        <span class="tag">Chrome Ext</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Measure page load performance with A-F grading. Comprehensive performance analysis tool.</p>
-      <ul>
-        <li>📊 A-F performance grading system</li>
-        <li>🔍 Detailed load timing analysis</li>
-        <li>💡 Performance optimization suggestions</li>
-        <li>📈 Historical performance tracking</li>
-        <li>🎯 Competitor performance comparison</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://github.com/Chesten223/speed-analyzer" class="btn btn-primary">⭐ GitHub</a>
-        <a href="https://speed-analyzer-site.pages.dev" class="btn btn-outline">Try Free</a>
-      </div>
-    </div>
-    <!-- API Tester -->
-    <div class="card">
-      <h2>
-        <span>🔧</span> API Tester
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Test REST APIs with method selector, auth, response viewer. Comprehensive API testing tool for developers.</p>
-      <ul>
-        <li>🔄 HTTP method selector (GET, POST, PUT, DELETE, etc.)</li>
-        <li>🔐 Authentication support (Bearer tokens, Basic auth)</li>
-        <li>📋 Beautiful response viewer with syntax highlighting</li>
-        <li>📊 Request/response headers and timing</li>
-        <li>💾 History of all API requests</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://api-tester-7jm.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/api-tester" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- Favicon Generator -->
-    <div class="card">
-      <h2>
-        <span>🎨</span> Favicon Generator
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Generate favicons from text/emoji with 20 presets. Create beautiful favicon files for your website.</p>
-      <ul>
-        <li>🎨 20+ preset designs and styles</li>
-        <li>🔤 Text to favicon conversion</li>
-        <li>😊 Emoji favicon generation</li>
-        <li>📱 Multiple size formats (16x16 to 512x512)</li>
-        <li>💾 Download complete favicon package</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://favicon-gen-78e.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/favicon-gen" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- CSS Grid Generator -->
-    <div class="card">
-      <h2>
-        <span>🔲</span> CSS Grid Generator
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Visual CSS Grid layout builder with presets. Create complex CSS Grid layouts with ease.</p>
-      <ul>
-        <li>🎨 Visual grid builder with drag-and-drop</li>
-        <li>📐 Preset layouts for common patterns</li>
-        <li>🔧 Grid gap and sizing controls</li>
-        <li>📱 Responsive design controls</li>
-        <li>💾 Generated CSS with copy button</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://css-grid.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/css-grid" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- SVG Path Editor -->
-    <div class="card">
-      <h2>
-        <span>🎯</span> SVG Path Editor
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Visual SVG path editor with drag-and-drop. Edit SVG paths interactively with mouse controls.</p>
-      <ul>
-        <li>🖱️ Drag-and-drop path editing</li>
-        <li>📐 Precise control point manipulation</li>
-        <li>🔧 Live path preview and validation</li>
-        <li>📱 Zoom and pan controls</li>
-        <li>💾 Export SVG and path data</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://svg-editor-654.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/svg-editor" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- MD→HTML Converter -->
-    <div class="card">
-      <h2>
-        <span>📝</span> MD→HTML Converter
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Convert Markdown to HTML with live preview. Real-time conversion with preview pane.</p>
-      <ul>
-        <li>🔄 Real-time conversion</li>
-        <li>👀 Split-pane preview</li>
-        <li>📋 Common Markdown extensions support</li>
-        <li>🎨 Syntax highlighting for Markdown</li>
-        <li>💾 Copy HTML output or download file</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://md2html-alc.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/md2html" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- README Generator -->
-    <div class="card">
-      <h2>
-        <span>📄</span> README Generator
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Generate GitHub READMEs with form editor. Create professional README files with ease.</p>
-      <ul>
-        <li>📝 Form-based editor</li>
-        <li>📊 Project metadata input</li>
-        <li>🔧 Installation and usage templates</li>
-        <li>🎨 Professional styling options</li>
-        <li>💾 Copy to clipboard or download</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://readme-gen.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/readme-gen" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-    <!-- Stock Photos -->
-    <div class="card">
-      <h2>
-        <span>📸</span> Stock Photos
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>Free stock photo gallery with download. Access high-quality images for your projects.</p>
-      <ul>
-        <li>📸 High-quality stock photos in multiple categories</li>
-        <li>🔄 Regular updates with fresh content</li>
-        <li>📱 Mobile-friendly interface</li>
-        <li>💾 Batch download support</li>
-        <li>🔍 Advanced search and filtering</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://stock-photos-7f3.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/stock-photos" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
-    <!-- Email Builder -->
-    <div class="card">
-      <h2>
-        <span>📧</span> Email Builder
-        <span class="tag">Web Tool</span>
-        <span class="tag">Free</span>
-      </h2>
-      <p>HTML email template generator. Create responsive email templates with ease.</p>
-      <ul>
-        <li>🎨 Drag-and-drop email editor</li>
-        <li>📱 Responsive design for all devices</li>
-        <li>🔧 Pre-built templates for common use cases</li>
-        <li>📋 Live HTML preview</li>
-        <li>💾 Export and download templates</li>
-      </ul>
-      <div class="btn-group">
-        <a href="https://email-builder-4k7.pages.dev" class="btn btn-primary">Try Free</a>
-        <a href="https://github.com/Chesten223/email-builder" class="btn btn-outline">GitHub</a>
-      </div>
-    </div>
-
+  <!-- CATEGORY NAV -->
+  <div class="cat-nav" id="catNav">
+    <button class="cat-btn active" data-cat="all">All</button>
+    <button class="cat-btn" data-cat="json">JSON & Data</button>
+    <button class="cat-btn" data-cat="css">CSS & Design</button>
+    <button class="cat-btn" data-cat="text">Text & Code</button>
+    <button class="cat-btn" data-cat="web">Web & SEO</button>
+    <button class="cat-btn" data-cat="encoding">Encoding & Security</button>
+    <button class="cat-btn" data-cat="generators">Generators</button>
+    <button class="cat-btn" data-cat="devops">DevOps</button>
+    <button class="cat-btn" data-cat="networking">Networking</button>
+    <button class="cat-btn" data-cat="a11y">Accessibility</button>
+    <button class="cat-btn" data-cat="productivity">Productivity</button>
   </div>
 
-  <div class="footer">
-    <p>Made with ❤️ by Chesten. Open source, free forever.</p>
+  <!-- TOOLS GRID -->
+  <div class="tools-section">
+    <div class="tools-grid" id="toolsGrid"></div>
+    <div class="no-results" id="noResults" style="display:none;">No tools found. Try a different search.</div>
   </div>
 
-</body>
+  <!-- FEATURED PRODUCTS -->
+  <div class="section-divider" id="products">
+    <h2>Paid Products</h2>
+  </div>
+  <div class="products-grid">
+    <div class="product-card">
+      <span class="product-badge">Chrome Extension</span>
+      <h3 class="product-name">ResellBuddy</h3>
+      <div class="product-price">$9 / month</div>
+      <p class="product-desc">Automate Poshmark & Mercari reselling. Auto-share, auto-like, auto-follow on autopilot. Save 3+ hours daily.</p>
+      <a href="https://resellbuddy.pages.dev" target="_blank" class="product-cta">Learn More &rarr;</a>
+    </div>
+    <div class="product-card">
+      <span class="product-badge">Template Pack</span>
+      <h3 class="product-name">Starter Kit</h3>
+      <div class="product-price">$49 once</div>
+      <p class="product-desc">Production-ready dev tool starter template. Ship your own tools in hours, not weeks. Full source code included.</p>
+      <a href="https://chesten.gumroad.com" target="_blank" class="product-cta">Get Access &rarr;</a>
+    </div>
+    <div class="product-card">
+      <span class="product-badge">Chrome Extension</span>
+      <h3 class="product-name">DevTool Box</h3>
+      <div class="product-price">$29 once</div>
+      <p class="product-desc">4 essential developer tools in one extension: color picker, font detector, CSS inspector, element ruler. Zero bloat.</p>
+      <a href="https://devtool-box.pages.dev" target="_blank" class="product-cta">Learn More &rarr;</a>
+    </div>
+  </div>
+
+  <!-- CHROME EXTENSIONS -->
+  <div class="section-divider" id="extensions">
+    <h2>Chrome Extensions</h2>
+  </div>
+  <div class="ext-grid">
+    <div class="ext-card">
+      <span class="ext-icon">&#x1F9E0;</span>
+      <div class="ext-name">JSON Hero</div>
+      <div class="ext-desc">Beautiful JSON viewer with syntax highlighting, tree view & search</div>
+      <a href="https://github.com/Chesten223/json-hero" target="_blank"><span class="ext-badge free">Free</span></a>
+    </div>
+    <div class="ext-card">
+      <span class="ext-icon">&#x1F50D;</span>
+      <div class="ext-name">SEO Booster</div>
+      <div class="ext-desc">Meta tags, social card previews, heading analysis & live SEO editing</div>
+      <a href="https://github.com/Chesten223/seo-booster" target="_blank"><span class="ext-badge free">Free</span></a>
+    </div>
+    <div class="ext-card">
+      <span class="ext-icon">&#x1F680;</span>
+      <div class="ext-name">ResellBuddy</div>
+      <div class="ext-desc">Automate Poshmark & Mercari — share, like, follow on autopilot</div>
+      <a href="https://github.com/Chesten223/resell-buddy" target="_blank"><span class="ext-badge">Paid</span></a>
+    </div>
+    <div class="ext-card">
+      <span class="ext-icon">&#x1F6E0;&#xFE0F;</span>
+      <div class="ext-name">DevTool Box</div>
+      <div class="ext-desc">Color picker, font detector, CSS inspector & element ruler</div>
+      <a href="https://github.com/Chesten223/devtool-box" target="_blank"><span class="ext-badge">Paid</span></a>
+    </div>
+    <div class="ext-card">
+      <span class="ext-icon">&#x1F517;</span>
+      <div class="ext-name">Link Checker</div>
+      <div class="ext-desc">Find broken links on any page. Export CSV reports</div>
+      <a href="https://github.com/Chesten223/link-checker" target="_blank"><span class="ext-badge free">Free</span></a>
+    </div>
+    <div class="ext-card">
+      <span class="ext-icon">&#x1F36A;</span>
+      <div class="ext-name">Cookie Editor</div>
+      <div class="ext-desc">View, edit, add & delete cookies. Import/export configs</div>
+      <a href="https://github.com/Chesten223/cookie-editor" target="_blank"><span class="ext-badge free">Free</span></a>
+    </div>
+    <div class="ext-card">
+      <span class="ext-icon">&#x26A1;</span>
+      <div class="ext-name">Speed Analyzer</div>
+      <div class="ext-desc">Page load performance with A-F grading & optimization tips</div>
+      <a href="https://github.com/Chesten223/speed-analyzer" target="_blank"><span class="ext-badge free">Free</span></a>
+    </div>
+    <div class="ext-card">
+      <span class="ext-icon">&#x1F916;</span>
+      <div class="ext-name">V2EX AI</div>
+      <div class="ext-desc">AI assistant for V2EX — summarize, generate replies, analyze users</div>
+      <a href="https://github.com/Chesten223/v2ex-ai-ext" target="_blank"><span class="ext-badge free">Free</span></a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-left">&copy; 2024 Chesten. All tools free & open source.</div>
+      <div class="footer-links">
+        <a href="https://github.com/Chesten223" target="_blank">GitHub</a>
+        <a href="https://chesten.gumroad.com" target="_blank">Products</a>
+        <a href="https://devtools-site.pages.dev">Blog</a>
+        <a href="mailto:chesten@163.com">Email</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+  // ─── TOOL DATA ───
+  const TOOLS = [
+    // JSON & Data
+    { name:"JSON Hero", desc:"Beautiful JSON viewer with tree view, search & stats", cat:"json", url:"https://json-hero-8fu.pages.dev" },
+    { name:"JSON → TypeScript", desc:"Convert JSON to TypeScript interfaces instantly", cat:"json", url:"https://json-to-ts.pages.dev" },
+    { name:"JSON Schema Gen", desc:"Generate JSON Schema from any JSON object", cat:"json", url:"https://json-schema-gen.pages.dev" },
+    { name:"JSON Diff", desc:"Compare two JSON objects and highlight differences", cat:"json", url:"https://json-diff-zre.pages.dev" },
+    { name:"JSON Path", desc:"Query JSON with path expressions and extract data", cat:"json", url:"https://json-path.pages.dev" },
+    { name:"API Tester", desc:"Test REST APIs with method selector, auth & response viewer", cat:"json", url:"https://api-tester-7jm.pages.dev" },
+    { name:"API Builder", desc:"Build mock APIs and generate endpoint scaffolding", cat:"json", url:"https://github.com/Chesten223/api-builder" },
+
+    // CSS & Design
+    { name:"CSS Gradient", desc:"Visual gradient builder with copy-paste CSS output", cat:"css", url:"https://css-gradient-c7l.pages.dev" },
+    { name:"CSS Grid", desc:"Visual grid layout builder with drag-and-drop presets", cat:"css", url:"https://css-grid.pages.dev" },
+    { name:"CSS Borders", desc:"Design complex border styles visually", cat:"css", url:"https://css-borders.pages.dev" },
+    { name:"CSS Animation", desc:"Create CSS keyframe animations with timeline editor", cat:"css", url:"https://css-animation-diu.pages.dev" },
+    { name:"CSS Transition", desc:"Build and preview CSS transitions interactively", cat:"css", url:"https://css-transition.pages.dev" },
+    { name:"CSS Transform", desc:"Visual CSS transform builder — rotate, scale, skew", cat:"css", url:"https://css-transform.pages.dev" },
+    { name:"CSS Filter", desc:"Apply and chain CSS filters with real-time preview", cat:"css", url:"https://css-filter-64w.pages.dev" },
+    { name:"CSS Variables", desc:"Manage and preview CSS custom properties", cat:"css", url:"https://css-vars.pages.dev" },
+    { name:"Button Generator", desc:"Design beautiful CSS buttons with live preview", cat:"css", url:"https://button-gen.pages.dev" },
+    { name:"Gradient Button", desc:"Create gradient-styled buttons with hover effects", cat:"css", url:"https://gradient-btn.pages.dev" },
+    { name:"BG Pattern", desc:"Generate seamless CSS background patterns", cat:"css", url:"https://bg-pattern.pages.dev" },
+    { name:"Text Shadow", desc:"Visual text-shadow editor with presets", cat:"css", url:"https://text-shadow.pages.dev" },
+    { name:"Box Shadow", desc:"Design box shadows with layer control", cat:"css", url:"https://box-shadow-25g.pages.dev" },
+    { name:"Clip Path", desc:"Create CSS clip-path shapes visually", cat:"css", url:"https://clip-path.pages.dev" },
+    { name:"Flexbox Gen", desc:"Interactive flexbox layout builder", cat:"css", url:"https://flexbox-gen.pages.dev" },
+    { name:"Spacing Visualizer", desc:"Visualize margin, padding and spacing systems", cat:"css", url:"https://spacing-vis.pages.dev" },
+    { name:"Theme Generator", desc:"Generate complete design system themes", cat:"css", url:"https://theme-gen.pages.dev" },
+    { name:"Palette Generator", desc:"Create cohesive color palettes with export", cat:"css", url:"https://palette-gen.pages.dev" },
+    { name:"Font Pair", desc:"Find and preview beautiful font pairings", cat:"css", url:"https://font-pair.pages.dev" },
+    { name:"CSS Units", desc:"Convert between CSS units — px, rem, em, vw, vh", cat:"css", url:"https://css-units-7kc.pages.dev" },
+    { name:"Web Fonts", desc:"Browse and preview web-safe and Google Fonts", cat:"css", url:"https://web-fonts-9jn.pages.dev" },
+    { name:"Color Picker", desc:"Advanced color picker with HEX, RGB, HSL modes", cat:"css", url:"https://github.com/Chesten223/color-picker" },
+    { name:"Contrast Checker", desc:"Check WCAG color contrast ratios for accessibility", cat:"css", url:"https://contrast-check-44z.pages.dev" },
+
+    // Text & Code
+    { name:"Regex Tester", desc:"Test regex patterns with real-time matching & groups", cat:"text", url:"https://regex-tester-bik.pages.dev" },
+    { name:"Regex Practice", desc:"Learn regex through interactive exercises and challenges", cat:"text", url:"https://regex-practice-bur.pages.dev" },
+    { name:"Regex Crossword", desc:"Solve crossword puzzles using regex patterns", cat:"text", url:"https://regex-crossword.pages.dev" },
+    { name:"Diff Checker", desc:"Compare text side-by-side and highlight differences", cat:"text", url:"https://diff-checker-1c9.pages.dev" },
+    { name:"Code Minifier", desc:"Minify JS, CSS, HTML with size reduction stats", cat:"text", url:"https://github.com/Chesten223/code-minifier" },
+    { name:"JS Minify", desc:"JavaScript minifier with tree-shaking support", cat:"text", url:"https://js-minify.pages.dev" },
+    { name:"Python Formatter", desc:"Format Python code with PEP 8 compliance", cat:"text", url:"https://python-formatter.pages.dev" },
+    { name:"SQL Formatter", desc:"Format and beautify SQL queries", cat:"text", url:"https://github.com/Chesten223/sql-formatter" },
+    { name:"Text Transform", desc:"Transform text — uppercase, lowercase, title, camelCase", cat:"text", url:"https://text-transform-1ql.pages.dev" },
+    { name:"String Case", desc:"Convert between camelCase, snake_case, kebab-case & more", cat:"text", url:"https://string-case.pages.dev" },
+    { name:"Markdown Preview", desc:"Live Markdown editor with instant preview", cat:"text", url:"https://github.com/Chesten223/markdown-preview" },
+    { name:"MD → HTML", desc:"Convert Markdown to HTML with syntax highlighting", cat:"text", url:"https://md2html-alc.pages.dev" },
+    { name:"MD → HTML v2", desc:"Enhanced Markdown to HTML converter with themes", cat:"text", url:"https://md2html-v2.pages.dev" },
+    { name:"MD Table", desc:"Create Markdown tables with a visual editor", cat:"text", url:"https://md-table.pages.dev" },
+    { name:"Table Generator", desc:"Generate HTML tables from data with styling options", cat:"text", url:"https://table-gen-5uc.pages.dev" },
+    { name:"Table → Markdown", desc:"Convert HTML tables to Markdown format", cat:"text", url:"https://table2md-59w.pages.dev" },
+    { name:"Lorem Generator", desc:"Generate lorem ipsum placeholder text", cat:"text", url:"https://github.com/Chesten223/lorem-generator" },
+    { name:"Lorem Advanced", desc:"Advanced placeholder text with custom word counts", cat:"text", url:"https://lorem-advanced.pages.dev" },
+    { name:"Ipsum Generator", desc:"Paragraph and sentence-level ipsum generation", cat:"text", url:"https://ipsum-gen.pages.dev" },
+
+    // Web & SEO
+    { name:"OG Preview", desc:"Preview Open Graph meta tags as social sharing cards", cat:"web", url:"https://og-preview-dl3.pages.dev" },
+    { name:"OG Generator", desc:"Generate Open Graph meta tags for any page", cat:"web", url:"https://og-preview-gen.pages.dev" },
+    { name:"Twitter Card", desc:"Preview and generate Twitter Card meta tags", cat:"web", url:"https://twitter-card-6rc.pages.dev" },
+    { name:"Meta Generator", desc:"Generate all essential HTML meta tags at once", cat:"web", url:"https://meta-generator-6rk.pages.dev" },
+    { name:"Meta Analyzer", desc:"Analyze any URL's meta tags and SEO score", cat:"web", url:"https://meta-analyzer.pages.dev" },
+    { name:"SEO Booster", desc:"Chrome extension for live SEO auditing & editing", cat:"web", url:"https://github.com/Chesten223/seo-booster" },
+    { name:"HTTP Codes", desc:"Complete HTTP status code reference with fixes", cat:"web", url:"https://http-codes.pages.dev" },
+    { name:"HTTP Headers", desc:"HTTP header reference with security recommendations", cat:"web", url:"https://http-headers.pages.dev" },
+    { name:"HTTP Status", desc:"Searchable HTTP status code database", cat:"web", url:"https://http-status-4md.pages.dev" },
+    { name:"Sitemap Generator", desc:"Generate XML sitemaps for any website", cat:"web", url:"https://sitemap-gen.pages.dev" },
+    { name:"Robots.txt Gen", desc:"Create and validate robots.txt files", cat:"web", url:"https://robotstxt-gen.pages.dev" },
+    { name:"README Generator", desc:"Generate professional GitHub READMEs with forms", cat:"web", url:"https://readme-gen.pages.dev" },
+
+    // Encoding & Security
+    { name:"JWT Debug", desc:"Decode and debug JSON Web Tokens in real-time", cat:"encoding", url:"https://jwt-debug.pages.dev" },
+    { name:"JWT Claims", desc:"Inspect JWT claims, expiry and payload data", cat:"encoding", url:"https://jwt-claims.pages.dev" },
+    { name:"Password Generator", desc:"Generate strong, customizable passwords", cat:"encoding", url:"https://password-gen-4jj.pages.dev" },
+    { name:"UUID Generator", desc:"Generate RFC 4122 UUIDs in multiple versions", cat:"encoding", url:"https://github.com/Chesten223/uuid-gen" },
+    { name:"HTML Sanitizer", desc:"Sanitize HTML to prevent XSS attacks", cat:"encoding", url:"https://html-sanitizer.pages.dev" },
+    { name:"URL Tool", desc:"Parse, encode and decode URLs and components", cat:"encoding", url:"https://github.com/Chesten223/url-tool" },
+    { name:"Query Parser", desc:"Parse and visualize URL query strings", cat:"encoding", url:"https://query-parser.pages.dev" },
+    { name:"Data URL", desc:"Convert files to data URLs and back", cat:"encoding", url:"https://data-url-ybc.pages.dev" },
+    { name:"Image → Base64", desc:"Encode images as Base64 strings for inline use", cat:"encoding", url:"https://img2base64.pages.dev" },
+
+    // Generators
+    { name:"QR Generator", desc:"Generate QR codes with custom colors and export formats", cat:"generators", url:"https://qr-gen-9du.pages.dev" },
+    { name:"Favicon Generator", desc:"Generate favicons from text, emoji or images", cat:"generators", url:"https://favicon-gen-78e.pages.dev" },
+    { name:"Placeholder Gen", desc:"Generate placeholder images with custom sizes & colors", cat:"generators", url:"https://placeholder-gen-3t6.pages.dev" },
+    { name:"Placeholder API", desc:"API endpoint for dynamic placeholder image generation", cat:"generators", url:"https://placeholder-api.pages.dev" },
+    { name:"Email Builder", desc:"Drag-and-drop HTML email template builder", cat:"generators", url:"https://email-builder-4k7.pages.dev" },
+    { name:"Resume Builder", desc:"Build professional resumes with multiple templates", cat:"generators", url:"https://resume-builder-4vd.pages.dev" },
+    { name:"Progress Gen", desc:"Generate CSS progress bars and loading indicators", cat:"generators", url:"https://progress-gen.pages.dev" },
+    { name:"Cron Builder", desc:"Build and explain cron schedule expressions", cat:"generators", url:"https://cron-builder-5u3.pages.dev" },
+    { name:"Input Mask", desc:"Create input mask patterns for form fields", cat:"generators", url:"https://input-mask.pages.dev" },
+    { name:"ASCII Art", desc:"Convert text to ASCII art banners", cat:"generators", url:"https://ascii-art-atr.pages.dev" },
+    { name:"Cheatsheet Builder", desc:"Create custom developer cheatsheets", cat:"generators", url:"https://cheatsheet-builder.pages.dev" },
+    { name:"Snippet Generator", desc:"Generate code snippets in multiple languages", cat:"generators", url:"https://snippet-gen.pages.dev" },
+    { name:"Commit Generator", desc:"Generate conventional commit messages", cat:"generators", url:"https://commit-gen.pages.dev" },
+    { name:"Changelog Generator", desc:"Auto-generate changelogs from git history", cat:"generators", url:"https://changelog-gen.pages.dev" },
+    { name:"Docker Generator", desc:"Generate Dockerfiles and docker-compose configs", cat:"generators", url:"https://docker-gen.pages.dev" },
+
+    // DevOps
+    { name:"Server Config", desc:"Generate nginx, Apache & Caddy server configs", cat:"devops", url:"https://server-config-63v.pages.dev" },
+    { name:".env Editor", desc:"Edit and validate .env files with syntax checking", cat:"devops", url:"https://dotenv-editor.pages.dev" },
+    { name:"YAML Tool", desc:"Validate, format and convert YAML configurations", cat:"devops", url:"https://yaml-tool.pages.dev" },
+    { name:"TOML Editor", desc:"Edit and validate TOML configuration files", cat:"devops", url:"https://toml-editor.pages.dev" },
+    { name:"Web Components", desc:"Build and preview custom HTML web components", cat:"devops", url:"https://web-components-ayf.pages.dev" },
+
+    // Networking
+    { name:"DNS Lookup", desc:"Query DNS records for any domain", cat:"networking", url:"https://dns-lookup.pages.dev" },
+    { name:"WHOIS Lookup", desc:"Look up domain registration and ownership info", cat:"networking", url:"https://whois-lookup-13t.pages.dev" },
+    { name:"CIDR Calculator", desc:"Calculate CIDR subnets, ranges and host counts", cat:"networking", url:"https://cidr-calc.pages.dev" },
+    { name:"Responsive Test", desc:"Test responsiveness across multiple device sizes", cat:"networking", url:"https://responsive-test-cyf.pages.dev" },
+    { name:"Page Weight", desc:"Analyze page size and loading performance", cat:"networking", url:"https://page-weight.pages.dev" },
+    { name:"Browser Info", desc:"Display detailed browser and device capabilities", cat:"networking", url:"https://browser-info-3kl.pages.dev" },
+
+    // Accessibility & Quality
+    { name:"A11y Checker", desc:"Audit pages for accessibility issues and WCAG compliance", cat:"a11y", url:"https://a11y-check.pages.dev" },
+    { name:"Contrast Check", desc:"Verify color contrast meets WCAG 2.1 standards", cat:"a11y", url:"https://contrast-check-44z.pages.dev" },
+    { name:"Media Tag", desc:"Generate accessible media tags with alt text", cat:"a11y", url:"https://media-tag.pages.dev" },
+    { name:"Input Types", desc:"Reference for all HTML input types with examples", cat:"a11y", url:"https://input-types.pages.dev" },
+    { name:"Privacy Policy Gen", desc:"Generate privacy policy documents for your apps", cat:"a11y", url:"https://privacy-gen.pages.dev" },
+
+    // Productivity
+    { name:"Stock Photos", desc:"Free stock photo gallery with batch download", cat:"productivity", url:"https://stock-photos-7f3.pages.dev" },
+    { name:"Image Compress", desc:"Compress images with quality control and preview", cat:"productivity", url:"https://image-compress-2ky.pages.dev" },
+    { name:"Emoji Picker", desc:"Search, browse and copy emojis with categories", cat:"productivity", url:"https://emoji-picker-54o.pages.dev" },
+    { name:"Timestamp Converter", desc:"Convert between Unix timestamps and dates", cat:"productivity", url:"https://timestamp-converter-5au.pages.dev" },
+    { name:"Number Converter", desc:"Convert numbers between formats and bases", cat:"productivity", url:"https://number-converter-c81.pages.dev" },
+    { name:"Number Base", desc:"Convert between binary, octal, decimal & hex", cat:"productivity", url:"https://github.com/Chesten223/number-base" },
+    { name:"NumBase v2", desc:"Enhanced number base converter with bit visualization", cat:"productivity", url:"https://numbase-v2.pages.dev" },
+    { name:"Keycode Enhanced", desc:"Interactive keyboard event inspector", cat:"productivity", url:"https://keycode-enh.pages.dev" },
+    { name:"Git Cheatsheet", desc:"Comprehensive git command reference with search", cat:"productivity", url:"https://git-cheatsheet-1j5.pages.dev" },
+    { name:"Git Branch", desc:"Visualize git branch strategies and workflows", cat:"productivity", url:"https://git-branch.pages.dev" },
+    { name:"Array Methods", desc:"Interactive JavaScript array method reference", cat:"productivity", url:"https://array-methods.pages.dev" },
+    { name:"Async Visualizer", desc:"Visualize JavaScript async/await and Promises", cat:"productivity", url:"https://async-visualizer.pages.dev" },
+    { name:"Entity Reference", desc:"HTML entity and character reference lookup", cat:"productivity", url:"https://entity-reference.pages.dev" },
+    { name:"Specificity Calc", desc:"Calculate and compare CSS selector specificity", cat:"productivity", url:"https://specific-ity.pages.dev" },
+    { name:"Cron Trainer", desc:"Learn cron expressions through interactive examples", cat:"productivity", url:"https://cron-trainer.pages.dev" },
+  ];
+
+  const CAT_LABELS = {
+    json:"JSON & Data", css:"CSS & Design", text:"Text & Code", web:"Web & SEO",
+    encoding:"Encoding & Security", generators:"Generators", devops:"DevOps",
+    networking:"Networking", a11y:"Accessibility & Quality", productivity:"Productivity"
+  };
+
+  // ─── RENDER ───
+  const grid = document.getElementById('toolsGrid');
+  const noResults = document.getElementById('noResults');
+  const countEl = document.getElementById('searchCount');
+
+  function renderTools(filter = '', cat = 'all') {
+    const q = filter.toLowerCase().trim();
+    const filtered = TOOLS.filter(t => {
+      const matchCat = cat === 'all' || t.cat === cat;
+      const matchQ = !q || t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || (CAT_LABELS[t.cat]||'').toLowerCase().includes(q) || t.cat.toLowerCase().includes(q);
+      return matchCat && matchQ;
+    });
+
+    countEl.textContent = filtered.length + ' / ' + TOOLS.length;
+
+    if (!filtered.length) {
+      grid.innerHTML = '';
+      noResults.style.display = 'block';
+      return;
+    }
+    noResults.style.display = 'none';
+
+    let html = '';
+    filtered.forEach(t => {
+      html += '<div class="tool-card" data-cat="' + t.cat + '">' +
+        '<div class="tool-card-head">' +
+          '<div class="tool-name"><a href="' + t.url + '" target="_blank">' + t.name + '</a></div>' +
+          '<span class="tool-tag">' + CAT_LABELS[t.cat] + '</span>' +
+        '</div>' +
+        '<div class="tool-desc">' + t.desc + '</div>' +
+      '</div>';
+    });
+    grid.innerHTML = html;
+  }
+
+  // ─── SEARCH ───
+  const searchInput = document.getElementById('searchInput');
+  let activeCat = 'all';
+
+  searchInput.addEventListener('input', function() {
+    renderTools(this.value, activeCat);
+  });
+
+  // ─── CATEGORY BUTTONS ───
+  document.getElementById('catNav').addEventListener('click', function(e) {
+    if (!e.target.classList.contains('cat-btn')) return;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    activeCat = e.target.dataset.cat;
+    renderTools(searchInput.value, activeCat);
+  });
+
+  // ─── TYPING ANIMATION ───
+  (function() {
+    const phrases = [
+      'Browser-based. No install. No sign-up.',
+      'Ship faster. Code better. Zero ads.',
+      'Every tool a developer needs, free forever.',
+      'Open source. Built by Chesten.'
+    ];
+    const el = document.getElementById('typed-text');
+    let pi = 0, ci = 0, deleting = false, pause = 0;
+
+    function tick() {
+      if (pause > 0) { pause--; requestAnimationFrame(tick); return; }
+      const phrase = phrases[pi];
+      if (!deleting) {
+        ci++;
+        el.textContent = phrase.substring(0, ci);
+        if (ci === phrase.length) { deleting = true; pause = 120; }
+        else pause = 2;
+      } else {
+        ci--;
+        el.textContent = phrase.substring(0, ci);
+        if (ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; pause = 20; }
+        else pause = 1;
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  })();
+
+  // Initial render
+  renderTools();
+  </script>
+
+<script>!function(){var i=new Image;i.src="https://email-collector.chesten.workers.dev/track?u="+encodeURIComponent(location.href)+"&r="+encodeURIComponent(document.referrer)}();</script></body>
 </html>
