@@ -1,0 +1,21 @@
+name: SEO Meta Tag Check
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Weekly Monday 9 AM
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check devtools-site
+        uses: Chesten223/meta-tag-action@v1
+        id: meta
+        with:
+          url: 'https://devtools-site-cos.pages.dev'
+      
+      - name: Results
+        run: |
+          echo "Title: ${{ steps.meta.outputs.title }}"
+          echo "Description: ${{ steps.meta.outputs.description }}"
+          echo "Full: ${{ steps.meta.outputs.result }}"
