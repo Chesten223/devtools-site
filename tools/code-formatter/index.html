@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Formatter & Minifier</title>
+<meta name="description" content="Format and minify JavaScript, CSS, HTML, JSON, SQL, and Python code online.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;min-height:100vh}
+.container{max-width:1100px;margin:0 auto;padding:2rem 1rem}
+h1{font-size:1.75rem;font-weight:700;color:#fff;text-align:center;margin-bottom:.25rem}
+.subtitle{text-align:center;color:#9ca3af;font-size:.9rem;margin-bottom:1.5rem}
+a{color:#22c55e}
+.card{background:#111827;border:1px solid #1f2937;border-radius:.75rem;padding:1.25rem;margin-bottom:1rem}
+.toolbar{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:1rem}
+button,.select-btn{background:#1f2937;color:#e5e7eb;border:1px solid #374151;border-radius:.5rem;padding:.5rem 1rem;cursor:pointer;font-size:.85rem;transition:border-color .15s,background .15s}
+button:hover,.select-btn:hover{border-color:#22c55e;background:#162416}
+button:active{transform:scale(.97)}
+button.primary{background:#22c55e;color:#0a0a0a;font-weight:600;border-color:#22c55e}
+button.primary:hover{background:#16a34a}
+select{background:#1f2937;color:#e5e7eb;border:1px solid #374151;border-radius:.5rem;padding:.45rem .6rem;font-size:.85rem;cursor:pointer}
+select:focus{outline:none;border-color:#22c55e}
+textarea{width:100%;background:#0a0a0a;color:#e5e7eb;border:1px solid #1f2937;border-radius:.5rem;padding:.75rem;font-family:'Courier New',Consolas,monospace;font-size:.85rem;resize:vertical;min-height:200px;tab-size:4}
+textarea:focus{outline:none;border-color:#22c55e}
+.label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem}
+.label-row span{font-size:.8rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.lang-badge{display:inline-block;background:#22c55e20;color:#22c55e;font-size:.7rem;padding:.15rem .5rem;border-radius:.25rem;font-weight:600;text-transform:uppercase}
+.output-wrap{position:relative;background:#0a0a0a;border:1px solid #1f2937;border-radius:.5rem;min-height:200px;overflow:auto}
+.output-wrap pre{margin:0;padding:.75rem;font-family:'Courier New',Consolas,monospace;font-size:.85rem;white-space:pre-wrap;word-wrap:break-word;line-height:1.55}
+.output-raw{white-space:pre!important;word-wrap:normal!important;overflow-x:auto}
+/* syntax colors */
+.tk-kw{color:#c084fc}
+.tk-str{color:#fbbf24}
+.tk-num{color:#60a5fa}
+.tk-cmt{color:#6b7280;font-style:italic}
+.tk-tag{color:#f472b6}
+.tk-attr{color:#38bdf8}
+.tk-fn{color:#34d399}
+.tk-punc{color:#9ca3af}
+.tk-sql-kw{color:#c084fc}
+.tk-sql-str{color:#fbbf24}
+.tk-sql-num{color:#60a5fa}
+.copy-bar{position:absolute;top:.4rem;right:.4rem;display:flex;gap:.35rem}
+.copy-bar button{font-size:.75rem;padding:.3rem .6rem;border-radius:.35rem}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#22c55e;color:#0a0a0a;padding:.5rem 1.2rem;border-radius:.5rem;font-weight:600;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:768px){.grid{grid-template-columns:1fr}}
+.stats{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.78rem;color:#9ca3af;margin-top:.5rem}
+.stats span b{color:#e5e7eb}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Code Formatter &amp; Minifier</h1>
+  <p class="subtitle">Format and minify JavaScript, CSS, HTML, JSON, SQL, and Python code online.</p>
+
+  <div class="card">
+    <div class="toolbar">
+      <select id="langSelect" title="Language">
+        <option value="auto">Auto-detect</option>
+        <option value="javascript">JavaScript</option>
+        <option value="typescript">TypeScript</option>
+        <option value="css">CSS</option>
+        <option value="html">HTML</option>
+        <option value="json">JSON</option>
+        <option value="sql">SQL</option>
+        <option value="python">Python</option>
+      </select>
+      <select id="tabSize" title="Tab size">
+        <option value="2">2 spaces</option>
+        <option value="4" selected>4 spaces</option>
+        <option value="8">8 spaces</option>
+      </select>
+      <button class="primary" onclick="formatCode()">Format</button>
+      <button onclick="minifyCode()">Minify</button>
+      <button onclick="copyOutput()">Copy</button>
+      <button onclick="downloadOutput()">Download</button>
+      <button onclick="clearAll()">Clear</button>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="label-row"><span>Input</span></div>
+        <textarea id="input" placeholder="Paste your code here..." spellcheck="false"></textarea>
+      </div>
+      <div>
+        <div class="label-row">
+          <span>Output</span>
+          <span id="langBadge" class="lang-badge" style="visibility:hidden"></span>
+        </div>
+        <div class="output-wrap" id="outputWrap">
+          <div class="copy-bar">
+            <button onclick="copyOutput()" title="Copy output">Copy</button>
+          </div>
+          <pre id="output"><span style="color:#6b7280">Formatted output will appear here...</span></pre>
+        </div>
+      </div>
+    </div>
+    <div class="stats" id="stats"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const input = $('input');
+const output = $('output');
+const langSelect = $('langSelect');
+const tabSizeSel = $('tabSize');
+const langBadge = $('langBadge');
+const statsEl = $('stats');
+let rawOutput = '';
+
+function getTab() { return ' '.repeat(parseInt(tabSizeSel.value)); }
+
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1500);
+}
+
+function detectLang(code) {
+  const t = code.trim();
+  if (!t) return 'javascript';
+  // JSON
+  if ((t[0] === '{' && t[t.length-1] === '}') || (t[0] === '[' && t[t.length-1] === ']')) {
+    try { JSON.parse(t); return 'json'; } catch(e) {}
+  }
+  // HTML
+  if (/<[a-z][\s>]/i.test(t) && /<\/[a-z]+>/i.test(t)) return 'html';
+  if (/^<!DOCTYPE/i.test(t)) return 'html';
+  // SQL
+  if (/^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|WITH|UNION)\b/i.test(t)) return 'sql';
+  // Python
+  if (/^\s*def\s+\w+\s*\(/m.test(t) || /^\s*import\s+/m.test(t) || /^\s*from\s+[\w.]+\s+import/m.test(t) || /^\s*class\s+\w+/m.test(t)) return 'python';
+  if (/^\s*@/m.test(t) && /def\s+/m.test(t)) return 'python';
+  // TypeScript
+  if (/\:\s*(string|number|boolean|any|void|never|unknown)\b/.test(t) || /\binterface\s+\w+/.test(t) || /\btype\s+\w+\s*=/.test(t)) return 'typescript';
+  // CSS
+  if (/\{[^}]*\}/.test(t) && /[\w-]+\s*:\s*[^;]+;/.test(t) && !/\bfunction\b/.test(t)) return 'css';
+  return 'javascript';
+}
+
+function getLang() {
+  const sel = langSelect.value;
+  return sel === 'auto' ? detectLang(input.value) : sel;
+}
+
+// ── JSON ──
+function formatJSON(code, tab) {
+  const obj = JSON.parse(code);
+  return JSON.stringify(obj, null, tab);
+}
+function minifyJSON(code) {
+  return JSON.stringify(JSON.parse(code));
+}
+
+// ── JavaScript / TypeScript ──
+function formatJS(code, tab) {
+  let src = code.replace(/\r\n/g, '\n');
+  // normalize strings protection
+  const strings = [];
+  let s = src;
+  s = s.replace(/(["'`])((?:\\.|(?!\1)[^\\])*)\1/g, (m) => { strings.push(m); return `__STR${strings.length-1}__`; });
+  // strip comments
+  s = s.replace(/\/\/.*$/gm, '');
+  s = s.replace(/\/\*[\s\S]*?\*\//g, '');
+  // normalize whitespace
+  s = s.replace(/\s+/g, ' ');
+  // spaces around operators
+  s = s.replace(/\s*([=+\-*/<>!&|?:]+)\s*/g, ' $1 ');
+  s = s.replace(/\s*;\s*/g, ';\n');
+  s = s.replace(/\s*,\s*/g, ', ');
+  // braces on new line approach
+  s = s.replace(/\s*\{\s*/g, ' {\n');
+  s = s.replace(/\s*\}\s*/g, '\n}\n');
+  s = s.replace(/\{\s*\n\s*\n/g, '{\n');
+
+  const lines = s.split('\n');
+  let indent = 0;
+  const out = [];
+  for (let raw of lines) {
+    let line = raw.trim();
+    if (!line) continue;
+    if (line.startsWith('}') || line.startsWith(']') || line.startsWith(')')) indent = Math.max(0, indent - 1);
+    out.push(tab.repeat(indent) + line);
+    const opens = (line.match(/[\{\[\(]/g) || []).length;
+    const closes = (line.match(/[\}\]\)]/g) || []).length;
+    indent = Math.max(0, indent + opens - closes);
+    if (line.startsWith('}') || line.startsWith(']') || line.startsWith(')')) { /* already decremented */ }
+  }
+  let result = out.join('\n');
+  // restore strings
+  result = result.replace(/__STR(\d+)__/g, (_, i) => strings[parseInt(i)]);
+  return result;
+}
+
+function minifyJS(code) {
+  let s = code;
+  const strings = [];
+  s = s.replace(/(["'`])((?:\\.|(?!\1)[^\\])*)\1/g, m => { strings.push(m); return `__STR${strings.length-1}__`; });
+  s = s.replace(/\/\/.*$/gm, '');
+  s = s.replace(/\/\*[\s\S]*?\*\//g, '');
+  s = s.replace(/\s+/g, ' ');
+  s = s.replace(/\s*([{}();,=+\-*/<>!&|?:])\s*/g, '$1');
+  s = s.replace(/__STR(\d+)__/g, (_, i) => strings[parseInt(i)]);
+  return s.trim();
+}
+
+// ── CSS ──
+function formatCSS(code, tab) {
+  let s = code.replace(/\r\n/g, '\n');
+  const strings = [];
+  s = s.replace(/(["'])((?:\\.|(?!\1)[^\\])*)\1/g, m => { strings.push(m); return `__STR${strings.length-1}__`; });
+  s = s.replace(/\/\*[\s\S]*?\*\//g, '');
+  s = s.replace(/\s+/g, ' ');
+  // split rules
+  s = s.replace(/\s*\{\s*/g, ' {\n');
+  s = s.replace(/\s*\}\s*/g, '\n}\n');
+  s = s.replace(/;\s*/g, ';\n');
+  const lines = s.split('\n');
+  let indent = 0;
+  const out = [];
+  for (let raw of lines) {
+    let line = raw.trim();
+    if (!line) continue;
+    if (line === '}') { indent = Math.max(0, indent - 1); out.push(tab.repeat(indent) + '}'); continue; }
+    if (line.endsWith('{')) { out.push(tab.repeat(indent) + line); indent++; continue; }
+    out.push(tab.repeat(indent) + line);
+  }
+  let result = out.join('\n');
+  result = result.replace(/__STR(\d+)__/g, (_, i) => strings[parseInt(i)]);
+  return result;
+}
+
+function minifyCSS(code) {
+  let s = code;
+  s = s.replace(/\/\*[\s\S]*?\*\//g, '');
+  s = s.replace(/\s+/g, ' ');
+  s = s.replace(/\s*([{}:;,])\s*/g, '$1');
+  s = s.replace(/;\}/g, '}');
+  return s.trim();
+}
+
+// ── HTML ──
+function formatHTML(code, tab) {
+  let s = code.replace(/\r\n/g, '\n');
+  const VOID = new Set(['area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr']);
+  // tokenize roughly
+  const tokens = [];
+  let i = 0;
+  while (i < s.length) {
+    if (s[i] === '<') {
+      if (s.substr(i, 4) === '<!--') {
+        const end = s.indexOf('-->', i);
+        if (end !== -1) { tokens.push(s.slice(i, end + 3)); i = end + 3; continue; }
+      }
+      const end = s.indexOf('>', i);
+      if (end !== -1) { tokens.push(s.slice(i, end + 1)); i = end + 1; continue; }
+    }
+    const next = s.indexOf('<', i);
+    if (next === -1) { tokens.push(s.slice(i)); break; }
+    tokens.push(s.slice(i, next));
+    i = next;
+  }
+  let indent = 0;
+  const out = [];
+  for (const tok of tokens) {
+    const t = tok.trim();
+    if (!t) continue;
+    if (t.startsWith('</')) { indent = Math.max(0, indent - 1); out.push(tab.repeat(indent) + t); continue; }
+    if (t.startsWith('<!') || t.startsWith('<?')) { out.push(tab.repeat(indent) + t); continue; }
+    if (t.startsWith('<')) {
+      out.push(tab.repeat(indent) + t);
+      const m = t.match(/^<(\w+)/);
+      if (m && !VOID.has(m[1].toLowerCase()) && !t.endsWith('/>') && !t.startsWith('<!')) indent++;
+      continue;
+    }
+    // text node
+    out.push(tab.repeat(indent) + t);
+  }
+  return out.join('\n');
+}
+
+function minifyHTML(code) {
+  let s = code.replace(/\r\n/g, '\n');
+  s = s.replace(/<!--[\s\S]*?-->/g, '');
+  s = s.replace(/\s+/g, ' ');
+  s = s.replace(/>\s+</g, '><');
+  return s.trim();
+}
+
+// ── SQL ──
+function formatSQL(code, tab) {
+  const KW = /\b(SELECT|FROM|WHERE|AND|OR|NOT|IN|BETWEEN|LIKE|IS|NULL|JOIN|INNER|LEFT|RIGHT|OUTER|FULL|CROSS|ON|GROUP\s+BY|ORDER\s+BY|HAVING|LIMIT|OFFSET|UNION|ALL|AS|INSERT\s+INTO|VALUES|UPDATE|SET|DELETE|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|INDEX|IF\s+EXISTS|IF\s+NOT\s+EXISTS|PRIMARY\s+KEY|FOREIGN\s+KEY|REFERENCES|DEFAULT|NOT\s+NULL|UNIQUE|CHECK|CONSTRAINT|INTO|DISTINCT|TOP|CASE|WHEN|THEN|ELSE|END|EXISTS|ASC|DESC|WITH|RECURSIVE)\b/gi;
+  let s = code.replace(/\r\n/g, '\n');
+  // break on major keywords at start of logical line
+  const majorKw = /^(SELECT|FROM|WHERE|JOIN|INNER|LEFT|RIGHT|OUTER|FULL|CROSS|ON|GROUP\s+BY|ORDER\s+BY|HAVING|LIMIT|OFFSET|UNION|INSERT\s+INTO|VALUES|UPDATE|SET|DELETE|CREATE|ALTER|DROP|WITH)\b/i;
+  s = s.replace(/;\s*/g, ';\n');
+  const lines = s.split('\n');
+  const out = [];
+  let indent = 0;
+  for (const raw of lines) {
+    const parts = [];
+    let rest = raw.trim();
+    if (!rest) continue;
+    // split by major keywords
+    while (rest.length) {
+      const m = rest.match(new RegExp('^(' + majorKw.source + ')\\b', 'i'));
+      if (m && parts.length > 0) {
+        parts.push('\n' + tab + rest.slice(0, m[0].length));
+        rest = rest.slice(m[0].length).trim();
+        continue;
+      }
+      // find next major keyword
+      const next = rest.search(new RegExp('\\b(' + majorKw.source + ')\\b', 'i'));
+      if (next > 0) {
+        parts.push(rest.slice(0, next).trim());
+        rest = rest.slice(next);
+      } else {
+        parts.push(rest);
+        break;
+      }
+    }
+    const line = parts.filter(Boolean).join(' ').replace(/\s+/g, ' ');
+    // indent subqueries
+    if (/^\(/.test(line)) indent++;
+    if (/\)$/.test(line)) indent = Math.max(0, indent - 1);
+    out.push(tab.repeat(indent) + line);
+  }
+  return out.join('\n');
+}
+
+function minifySQL(code) {
+  let s = code.replace(/\r\n/g, '\n');
+  s = s.replace(/--[^\n]*/g, '');
+  s = s.replace(/\/\*[\s\S]*?\*\//g, '');
+  s = s.replace(/\s+/g, ' ');
+  return s.trim();
+}
+
+// ── Python ──
+function formatPython(code, tab) {
+  let s = code.replace(/\r\n/g, '\n');
+  // preserve strings
+  const strings = [];
+  s = s.replace(/("""[\s\S]*?"""|'''[\s\S]*?'''|(["'])((?:\\.|(?!\3)[^\\])*)\3)/g, m => { strings.push(m); return `__STR${strings.length-1}__`; });
+  // strip comments inline
+  s = s.replace(/#[^\n]*/g, m => m.trim());
+  // normalize indentation: strip all leading space, re-indent by tracking block structure
+  const lines = s.split('\n');
+  const out = [];
+  let indent = 0;
+  for (const raw of lines) {
+    let stripped = raw.trim();
+    if (!stripped) { out.push(''); continue; }
+    // dedent keywords
+    if (/^(else|elif|except|finally)\b/.test(stripped) || stripped === ':') {
+      indent = Math.max(0, indent - 1);
+    }
+    out.push(tab.repeat(indent) + stripped);
+    if (stripped.endsWith(':')) {
+      indent++;
+    }
+  }
+  let result = out.join('\n');
+  result = result.replace(/__STR(\d+)__/g, (_, i) => strings[parseInt(i)]);
+  return result;
+}
+
+function minifyPython(code) {
+  let s = code.replace(/\r\n/g, '\n');
+  s = s.replace(/#[^\n]*/g, '');
+  s = s.replace(/\n+/g, '; ');
+  s = s.replace(/\s+/g, ' ');
+  return s.trim();
+}
+
+// ── Dispatcher ──
+function formatByLang(lang, code, tab) {
+  switch (lang) {
+    case 'json': return formatJSON(code, tab);
+    case 'css': return formatCSS(code, tab);
+    case 'html': return formatHTML(code, tab);
+    case 'sql': return formatSQL(code, tab);
+    case 'python': return formatPython(code, tab);
+    case 'typescript':
+    case 'javascript': return formatJS(code, tab);
+    default: return formatJS(code, tab);
+  }
+}
+function minifyByLang(lang, code) {
+  switch (lang) {
+    case 'json': return minifyJSON(code);
+    case 'css': return minifyCSS(code);
+    case 'html': return minifyHTML(code);
+    case 'sql': return minifySQL(code);
+    case 'python': return minifyPython(code);
+    case 'typescript':
+    case 'javascript': return minifyJS(code);
+    default: return minifyJS(code);
+  }
+}
+
+// ── Syntax highlighting ──
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function highlightJS(code) {
+  const tokens = [];
+  function protect(match) { tokens.push('<span class="tk-str">' + esc(match) + '</span>'); return `__TK${tokens.length-1}__`; }
+  let s = esc(code);
+  s = s.replace(/(\/\/[^\n]*)/g, m => { tokens.push('<span class="tk-cmt">' + m + '</span>'); return `__TK${tokens.length-1}__`; });
+  s = s.replace(/(\/\*[\s\S]*?\*\/)/g, m => { tokens.push('<span class="tk-cmt">' + m + '</span>'); return `__TK${tokens.length-1}__`; });
+  s = s.replace(/(&quot;)((?:\\.|[^&])*?)(&quot;)/g, protect);
+  s = s.replace(/(&#39;)((?:\\.|[^&])*?)(&#39;)/g, protect);
+  s = s.replace(/(`)((?:\\.|[^`])*?)(`)/g, protect);
+  s = s.replace(/\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|this|class|extends|import|export|from|default|async|await|try|catch|finally|throw|typeof|instanceof|in|of|yield|void|delete|with|debugger|super|static|get|set|interface|type|enum|implements|public|private|protected|abstract|declare|namespace|module|as|readonly)\b/g, '<span class="tk-kw">$1</span>');
+  s = s.replace(/\b(\d+\.?\d*)\b/g, '<span class="tk-num">$1</span>');
+  s = s.replace(/(__TK\d+__)/g, (_, t) => tokens[parseInt(t.match(/\d+/)[0])]);
+  return s;
+}
+
+function highlightCSS(code) {
+  let s = esc(code);
+  // comments
+  const tokens = [];
+  s = s.replace(/(\/\*[\s\S]*?\*\/)/g, m => { tokens.push('<span class="tk-cmt">' + m + '</span>'); return `__TK${tokens.length-1}__`; });
+  // strings
+  s = s.replace(/(&quot;)(.*?)(&quot;)/g, '<span class="tk-str">$1$2$3</span>');
+  s = s.replace(/(&#39;)(.*?)(&#39;)/g, '<span class="tk-str">$1$2$3</span>');
+  // properties before :
+  s = s.replace(/^(\s*)([\w-]+)(\s*:)/gm, '$1<span class="tk-attr">$2</span>$3');
+  // values after :
+  s = s.replace(/(:\s*)([^;{}]+)(;)/g, '$1<span class="tk-str">$2</span>$3');
+  // selectors before {
+  s = s.replace(/^([^{:]+)(\{)/gm, '<span class="tk-tag">$1</span>$2');
+  s = s.replace(/(__TK\d+__)/g, (_, t) => tokens[parseInt(t.match(/\d+/)[0])]);
+  return s;
+}
+
+function highlightHTML(code) {
+  let s = esc(code);
+  const tokens = [];
+  s = s.replace(/(&lt;!--[\s\S]*?--&gt;)/g, m => { tokens.push('<span class="tk-cmt">' + m + '</span>'); return `__TK${tokens.length-1}__`; });
+  s = s.replace(/(&lt;\/?)([\w-]+)/g, '$1<span class="tk-tag">$2</span>');
+  s = s.replace(/\b([\w-]+)(=)(&quot;)(.*?)(&quot;)/g, '<span class="tk-attr">$1</span>$2<span class="tk-str">$3$4$5</span>');
+  s = s.replace(/(__TK\d+__)/g, (_, t) => tokens[parseInt(t.match(/\d+/)[0])]);
+  return s;
+}
+
+function highlightSQL(code) {
+  let s = esc(code);
+  s = s.replace(/\b(SELECT|FROM|WHERE|AND|OR|NOT|IN|BETWEEN|LIKE|IS|NULL|JOIN|INNER|LEFT|RIGHT|OUTER|FULL|CROSS|ON|GROUP\s+BY|ORDER\s+BY|HAVING|LIMIT|OFFSET|UNION|ALL|AS|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|ALTER|DROP|INDEX|IF|EXISTS|PRIMARY|KEY|FOREIGN|REFERENCES|DEFAULT|UNIQUE|CHECK|CONSTRAINT|DISTINCT|TOP|CASE|WHEN|THEN|ELSE|END|ASC|DESC|WITH|RECURSIVE)\b/gi, '<span class="tk-sql-kw">$1</span>');
+  s = s.replace(/(&#39;)(.*?)(&#39;)/g, '<span class="tk-sql-str">$1$2$3</span>');
+  s = s.replace(/\b(\d+\.?\d*)\b/g, '<span class="tk-sql-num">$1</span>');
+  return s;
+}
+
+function highlightPython(code) {
+  const tokens = [];
+  function protect(match) { tokens.push('<span class="tk-str">' + esc(match) + '</span>'); return `__TK${tokens.length-1}__`; }
+  let s = esc(code);
+  s = s.replace(/(#[^\n]*)/g, m => { tokens.push('<span class="tk-cmt">' + m + '</span>'); return `__TK${tokens.length-1}__`; });
+  s = s.replace(/(&quot;{3}[\s\S]*?&quot;{3})/g, protect);
+  s = s.replace(/(&#39;{3}[\s\S]*?&#39;{3})/g, protect);
+  s = s.replace(/(&quot;)((?:\\.|[^&])*?)(&quot;)/g, protect);
+  s = s.replace(/(&#39;)((?:\\.|[^&])*?)(&#39;)/g, protect);
+  s = s.replace(/\b(def|class|return|if|elif|else|for|while|break|continue|import|from|as|try|except|finally|raise|with|yield|lambda|pass|global|nonlocal|assert|del|in|not|and|or|is|True|False|None|async|await)\b/g, '<span class="tk-kw">$1</span>');
+  s = s.replace(/\b(\d+\.?\d*)\b/g, '<span class="tk-num">$1</span>');
+  s = s.replace(/(__TK\d+__)/g, (_, t) => tokens[parseInt(t.match(/\d+/)[0])]);
+  return s;
+}
+
+function highlightJSON(code) {
+  let s = esc(code);
+  s = s.replace(/(&quot;)([\w\s-]+)(&quot;)(\s*:)/g, '<span class="tk-attr">$1$2$3</span>$4');
+  s = s.replace(/(&quot;)((?:\\.|[^&])*?)(&quot;)/g, '<span class="tk-str">$1$2$3</span>');
+  s = s.replace(/\b(true|false|null)\b/g, '<span class="tk-kw">$1</span>');
+  s = s.replace(/\b(-?\d+\.?\d*(?:[eE][+-]?\d+)?)\b/g, '<span class="tk-num">$1</span>');
+  return s;
+}
+
+function highlightByLang(lang, code) {
+  switch (lang) {
+    case 'json': return highlightJSON(code);
+    case 'css': return highlightCSS(code);
+    case 'html': return highlightHTML(code);
+    case 'sql': return highlightSQL(code);
+    case 'python': return highlightPython(code);
+    case 'typescript':
+    case 'javascript': return highlightJS(code);
+    default: return highlightJS(code);
+  }
+}
+
+// ── Actions ──
+function formatCode() {
+  const code = input.value;
+  if (!code.trim()) return showToast('No input code');
+  const lang = getLang();
+  const tab = getTab();
+  try {
+    rawOutput = formatByLang(lang, code, tab);
+  } catch (e) {
+    rawOutput = code;
+    showToast('Format error: ' + e.message);
+  }
+  renderOutput(lang);
+}
+
+function minifyCode() {
+  const code = input.value;
+  if (!code.trim()) return showToast('No input code');
+  const lang = getLang();
+  try {
+    rawOutput = minifyByLang(lang, code);
+  } catch (e) {
+    rawOutput = code;
+    showToast('Minify error: ' + e.message);
+  }
+  renderOutput(lang);
+}
+
+function renderOutput(lang) {
+  langBadge.textContent = lang;
+  langBadge.style.visibility = 'visible';
+  output.innerHTML = highlightByLang(lang, rawOutput);
+  output.classList.add('output-raw');
+  const inLen = input.value.length;
+  const outLen = rawOutput.length;
+  const diff = outLen - inLen;
+  const sign = diff >= 0 ? '+' : '';
+  statsEl.innerHTML = `<span>Input: <b>${inLen}</b> chars</span><span>Output: <b>${outLen}</b> chars</span><span>Diff: <b>${sign}${diff}</b></span>`;
+}
+
+function copyOutput() {
+  if (!rawOutput) return showToast('Nothing to copy');
+  navigator.clipboard.writeText(rawOutput).then(() => showToast('Copied to clipboard'));
+}
+
+function downloadOutput() {
+  if (!rawOutput) return showToast('Nothing to download');
+  const lang = getLang();
+  const exts = { javascript: 'js', typescript: 'ts', css: 'css', html: 'html', json: 'json', sql: 'sql', python: 'py' };
+  const ext = exts[lang] || 'txt';
+  const blob = new Blob([rawOutput], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `formatted.${ext}`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('Downloaded formatted.' + ext);
+}
+
+function clearAll() {
+  input.value = '';
+  rawOutput = '';
+  output.innerHTML = '<span style="color:#6b7280">Formatted output will appear here...</span>';
+  langBadge.style.visibility = 'hidden';
+  statsEl.innerHTML = '';
+}
+</script>
+</body>
+</html>

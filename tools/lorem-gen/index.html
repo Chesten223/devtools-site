@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lorem Ipsum Generator</title>
+    <meta name="description" content="Generate placeholder text in multiple styles. Free developer tool.">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #e5e7eb;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f9fafb;
+            margin-bottom: 0.25rem;
+        }
+        .subtitle {
+            color: #9ca3af;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+        .card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+        @media (max-width: 600px) {
+            .controls-grid { grid-template-columns: 1fr; }
+        }
+        .control-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .mode-btns, .style-btns {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+        .mode-btns button, .style-btns button {
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: #d1d5db;
+            padding: 0.45rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .mode-btns button:hover, .style-btns button:hover {
+            background: #374151;
+            color: #f9fafb;
+        }
+        .mode-btns button.active, .style-btns button.active {
+            background: #22c55e;
+            color: #000;
+            border-color: #22c55e;
+            font-weight: 600;
+        }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: #374151;
+            border-radius: 3px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #22c55e;
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #22c55e;
+            cursor: pointer;
+            border: none;
+        }
+        .count-display {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #22c55e;
+            min-width: 2.5rem;
+            text-align: center;
+        }
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.25rem;
+        }
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-track {
+            position: absolute;
+            inset: 0;
+            background: #374151;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .toggle-track::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            background: #9ca3af;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        .toggle input:checked + .toggle-track {
+            background: #22c55e;
+        }
+        .toggle input:checked + .toggle-track::after {
+            transform: translateX(20px);
+            background: #000;
+        }
+        .toggle-label {
+            font-size: 0.85rem;
+            color: #d1d5db;
+        }
+        .action-row {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .btn-generate {
+            background: #22c55e;
+            color: #000;
+            font-weight: 700;
+            padding: 0.65rem 1.75rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-generate:hover { background: #16a34a; }
+        .btn-secondary {
+            background: #1f2937;
+            color: #d1d5db;
+            border: 1px solid #374151;
+            padding: 0.65rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-secondary:hover {
+            background: #374151;
+            color: #f9fafb;
+        }
+        .stats {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.82rem;
+            color: #9ca3af;
+        }
+        .stats span { color: #e5e7eb; font-weight: 600; }
+        .output-area {
+            background: #0a0a0a;
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            padding: 1.25rem;
+            min-height: 200px;
+            max-height: 600px;
+            overflow-y: auto;
+            font-size: 0.92rem;
+            line-height: 1.75;
+            color: #d1d5db;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .output-area::-webkit-scrollbar { width: 6px; }
+        .output-area::-webkit-scrollbar-track { background: transparent; }
+        .output-area::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+        .output-area p { margin-bottom: 1em; }
+        .empty-state {
+            color: #6b7280;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+        footer {
+            text-align: center;
+            padding: 2rem 0 1rem;
+            color: #6b7280;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lorem Ipsum Generator</h1>
+        <p class="subtitle">Generate placeholder text in multiple styles. Free developer tool.</p>
+
+        <section class="card">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>Mode</label>
+                    <div class="mode-btns">
+                        <button data-mode="paragraphs" class="active">Paragraphs</button>
+                        <button data-mode="sentences">Sentences</button>
+                        <button data-mode="words">Words</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Style</label>
+                    <div class="style-btns">
+                        <button data-style="classic" class="active">Classic Latin</button>
+                        <button data-style="hipster">Hipster</button>
+                        <button data-style="developer">Developer</button>
+                        <button data-style="business">Business</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Count</label>
+                    <div class="slider-row">
+                        <input type="range" id="countSlider" min="1" max="100" value="3">
+                        <div class="count-display" id="countDisplay">3</div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Options</label>
+                    <div class="toggle-row">
+                        <label class="toggle">
+                            <input type="checkbox" id="startLorem" checked>
+                            <div class="toggle-track"></div>
+                        </label>
+                        <span class="toggle-label">Start with "Lorem ipsum..."</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="action-row">
+            <button class="btn-generate" id="generateBtn">Generate</button>
+            <button class="btn-secondary" id="copyBtn" disabled>Copy</button>
+            <button class="btn-secondary" id="exportBtn" disabled>Export .txt</button>
+        </div>
+
+        <div class="stats" id="stats" style="display:none;">
+            Characters: <span id="charCount">0</span> &middot; Words: <span id="wordCount">0</span>
+        </div>
+
+        <div class="card" style="padding:0;">
+            <div class="output-area" id="output">
+                <div class="empty-state">Click Generate to create placeholder text</div>
+            </div>
+        </div>
+
+        <footer>Free Lorem Ipsum Generator &mdash; No tracking, no cookies, no nonsense.</footer>
+    </div>
+
+<script>
+const WORDS = {
+    classic: [
+        'lorem','ipsum','dolor','sit','amet','consectetur','adipiscing','elit','sed','do',
+        'eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim',
+        'ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi',
+        'aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit',
+        'voluptate','velit','esse','cillum','fugiat','nulla','pariatur','excepteur','sint',
+        'occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt',
+        'mollit','anim','id','est','laborum','perspiciatis','unde','omnis','iste','natus',
+        'error','voluptatem','accusantium','doloremque','laudantium','totam','rem','aperiam',
+        'eaque','ipsa','quae','ab','illo','inventore','veritatis','quasi','architecto',
+        'beatae','vitae','dicta','explicabo','nemo','ipsam','quia','voluptas','aspernatur',
+        'aut','odit','fugit','consequuntur','magni','dolores','eos','ratione','sequi',
+        'nesciunt','neque','porro','quisquam','nihil','impedit','quo','minus','placeat',
+        'facere','possimus','assumenda','repellendus','temporibus','quibusdam','illum',
+        'corporis','suscipit','laboriosam','distinctio'
+    ],
+    hipster: [
+        'artisan','cold-brew','kombucha','farm-to-table','cronut','chicharrones',
+        'aesthetic','vegan','tofu','skateboard','marfa','bushwick','banjo','raw denim',
+        'beard','letterpress','gluten-free','portland','seitan','synth','retro',
+        'craft beer','bitters','sartorial','celiac','blog','scenester','truffaut',
+        'poutine','everyday','carry','kinfolk','typewriter','letterpress','williamsburg',
+        'vexillologist','hella','heirloom','snackwave','gastropub','jean shorts',
+        'dreamcatcher','leggings','neo-hippie','hashtag','cliche','lumbersexual',
+        'locavore','stumptown','shoreditch','crucifix','trust-fund','chambray',
+        'four-dollar toast','distillery','meggings','squid','pour-over','polaroid',
+        'wayfarers','fixie','bicycle','rights','umami','knausgaard','tote bag',
+        'pitchfork','slow-carb','meditation','chia','brunch','microdosing',
+        'street','art','vape','normcore','post-ironic','pabst','cred','roast',
+        'coffee','feral','austin','direct trade','single-origin','bushwick',
+        'selvage','echo','park','butcher','shop','vinyl','record','curated'
+    ],
+    developer: [
+        'array','async','function','variable','component','container','endpoint',
+        'middleware','callback','promise','deploy','pipeline','repository','branch',
+        'merge','commit','refactor','debug','runtime','compiler','framework',
+        'library','module','dependency','package','import','export','class',
+        'interface','protocol','abstraction','polymorphism','inheritance',
+        'algorithm','recursion','iteration','payload','response','request',
+        'database','schema','migration','query','index','cache','mutex','thread',
+        'process','memory','pointer','reference','garbage','collection','heap',
+        'stack','queue','linked','list','tree','graph','hash','table','sort',
+        'search','binary','tree','node','stateless','stateful','render','loop',
+        'event','listener','handler','proxy','adapter','factory','singleton',
+        'observer','strategy','decorator','iterator','stream','buffer','socket',
+        'token','auth','encrypt','decrypt','serialize','parse','tokenize',
+        'compile','transpile','bundle','minify','lint','test','coverage'
+    ],
+    business: [
+        'leverage','synergy','stakeholder','deliverable','ROI','bandwidth',
+        'circle','back','deep-dive','drill','down','pivot','scalable','disruption',
+        'innovation','ecosystem','paradigm','shift','move','needle','touch','base',
+        'low-hanging','fruit','win-win','game','changer','action','item','takeaway',
+        'pain','point','value','proposition','core','competency','best','practice',
+        'blue','sky','thinking','boil','ocean','silo','cross-functional','empower',
+        'ideate','iterate','optimize','streamline','spearhead','champion','drive',
+        'results','KPI','metric','benchmark','milestone','roadmap','strategy',
+        'initiative','objective','goal','alignment','transparency','accountability',
+        'governance','compliance','risk','mitigation','change','management',
+        'workflow','process','efficiency','productivity','growth','revenue',
+        'margin','forecast','pipeline','funnel','conversion','retention','churn'
+    ]
+};
+
+const CLASSIC_OPENER = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function genSentence(words, minLen, maxLen) {
+    const len = minLen + Math.floor(Math.random() * (maxLen - minLen + 1));
+    let s = [];
+    for (let i = 0; i < len; i++) s.push(pick(words));
+    s[0] = s[0].charAt(0).toUpperCase() + s[0].slice(1);
+    return s.join(' ') + '.';
+}
+
+function genParagraph(words, count) {
+    let paras = [];
+    for (let i = 0; i < count; i++) {
+        const sLen = 4 + Math.floor(Math.random() * 5);
+        let sentences = [];
+        for (let j = 0; j < sLen; j++) sentences.push(genSentence(words, 6, 14));
+        paras.push(sentences.join(' '));
+    }
+    return paras;
+}
+
+function genSentences(words, count) {
+    let out = [];
+    for (let i = 0; i < count; i++) out.push(genSentence(words, 6, 14));
+    return out;
+}
+
+function genWords(words, count) {
+    let out = [];
+    for (let i = 0; i < count; i++) out.push(pick(words));
+    return out;
+}
+
+function generate() {
+    const mode = document.querySelector('.mode-btns .active').dataset.mode;
+    const style = document.querySelector('.style-btns .active').dataset.style;
+    const count = parseInt(document.getElementById('countSlider').value, 10);
+    const startLorem = document.getElementById('startLorem').checked && style === 'classic';
+    const words = WORDS[style];
+
+    let result;
+    if (mode === 'paragraphs') result = genParagraph(words, count);
+    else if (mode === 'sentences') result = genSentences(words, count);
+    else result = [genWords(words, count).join(' ')];
+
+    if (startLorem && result.length > 0) {
+        if (mode === 'paragraphs') {
+            result[0] = CLASSIC_OPENER + ' ' + result[0];
+        } else if (mode === 'sentences') {
+            result[0] = CLASSIC_OPENER;
+        } else {
+            result[0] = 'Lorem ipsum dolor sit amet ' + result[0];
+        }
+    }
+
+    const plainText = mode === 'paragraphs' ? result.join('\n\n') : result.join(' ');
+    renderOutput(result, mode);
+    updateStats(plainText);
+    state.text = plainText;
+    document.getElementById('copyBtn').disabled = false;
+    document.getElementById('exportBtn').disabled = false;
+}
+
+function renderOutput(items, mode) {
+    const el = document.getElementById('output');
+    if (mode === 'paragraphs') {
+        el.innerHTML = items.map(p => '<p>' + esc(p) + '</p>').join('');
+    } else {
+        el.innerHTML = '<p>' + items.map(esc).join(' ') + '</p>';
+    }
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function updateStats(text) {
+    const chars = text.length;
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    document.getElementById('charCount').textContent = chars.toLocaleString();
+    document.getElementById('wordCount').textContent = words.toLocaleString();
+    document.getElementById('stats').style.display = 'flex';
+}
+
+function copyToClipboard() {
+    if (!state.text) return;
+    navigator.clipboard.writeText(state.text).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+    });
+}
+
+function exportTxt() {
+    if (!state.text) return;
+    const blob = new Blob([state.text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'lorem-ipsum.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+const state = { text: '' };
+
+document.querySelectorAll('.mode-btns button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btns button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+});
+
+document.querySelectorAll('.style-btns button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.style-btns button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+});
+
+document.getElementById('countSlider').addEventListener('input', function() {
+    document.getElementById('countDisplay').textContent = this.value;
+});
+
+document.getElementById('generateBtn').addEventListener('click', generate);
+document.getElementById('copyBtn').addEventListener('click', copyToClipboard);
+document.getElementById('exportBtn').addEventListener('click', exportTxt);
+
+generate();
+</script>
+</body>
+</html>

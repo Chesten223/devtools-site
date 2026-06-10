@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Comparison Slider</title>
+<meta name="description" content="Compare two images side by side with an interactive slider.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--card:#111827;--accent:#22c55e;--accent-hover:#16a34a;--text:#f3f4f6;--text-muted:#9ca3af;--border:#1f2937;--radius:12px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;padding:24px 16px}
+.container{max-width:960px;margin:0 auto}
+h1{font-size:1.75rem;font-weight:700;text-align:center;margin-bottom:8px}
+.subtitle{color:var(--text-muted);text-align:center;margin-bottom:32px;font-size:.95rem}
+
+/* Upload area */
+.upload-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+@media(max-width:560px){.upload-row{grid-template-columns:1fr}}
+.upload-box{background:var(--card);border:2px dashed var(--border);border-radius:var(--radius);padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;overflow:hidden}
+.upload-box:hover,.upload-box.dragover{border-color:var(--accent);background:#11182799}
+.upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-box .icon{font-size:2rem;margin-bottom:8px;display:block}
+.upload-box .label{font-size:.9rem;color:var(--text-muted)}
+.upload-box img{max-width:100%;max-height:120px;border-radius:6px;margin-top:8px;display:none}
+.upload-box.loaded .placeholder{display:none}
+.upload-box.loaded img{display:inline-block}
+.upload-box .clear-btn{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:14px;display:none;align-items:center;justify-content:center;line-height:1}
+.upload-box.loaded .clear-btn{display:flex}
+
+/* Compare viewport */
+.compare-wrap{position:relative;background:var(--card);border-radius:var(--radius);overflow:hidden;margin-bottom:24px;aspect-ratio:16/10;max-height:600px;user-select:none;touch-action:none;display:none}
+.compare-wrap.active{display:block}
+.compare-wrap canvas{width:100%;height:100%;display:block}
+.slider-handle{position:absolute;top:0;bottom:0;width:3px;background:var(--accent);cursor:ew-resize;z-index:5;transform:translateX(-50%)}
+.slider-handle::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:36px;height:36px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.slider-handle::after{content:'⟨  ⟩';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:12px;font-weight:700;letter-spacing:2px;z-index:1}
+.label-overlay{position:absolute;top:10px;padding:4px 10px;background:rgba(0,0,0,.55);border-radius:6px;font-size:.78rem;color:#fff;pointer-events:none;z-index:4}
+.label-overlay.left{left:10px}
+.label-overlay.right{right:10px}
+
+/* Buttons */
+.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border:none;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;transition:background .2s,transform .1s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:#1f2937}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Image Comparison Slider</h1>
+  <p class="subtitle">Compare two images side by side with an interactive slider. Upload PNG, JPG, or WEBP.</p>
+
+  <div class="upload-row">
+    <div class="upload-box" id="boxA">
+      <div class="placeholder">
+        <span class="icon">🖼️</span>
+        <span class="label">Drop or click — <strong>Before</strong></span>
+      </div>
+      <img id="imgA" alt="Before">
+      <button class="clear-btn" title="Remove">&times;</button>
+      <input type="file" accept="image/png,image/jpeg,image/webp" aria-label="Upload before image">
+    </div>
+    <div class="upload-box" id="boxB">
+      <div class="placeholder">
+        <span class="icon">🖼️</span>
+        <span class="label">Drop or click — <strong>After</strong></span>
+      </div>
+      <img id="imgB" alt="After">
+      <button class="clear-btn" title="Remove">&times;</button>
+      <input type="file" accept="image/png,image/jpeg,image/webp" aria-label="Upload after image">
+    </div>
+  </div>
+
+  <div class="compare-wrap" id="compareWrap">
+    <canvas id="canvas"></canvas>
+    <div class="slider-handle" id="handle"></div>
+    <div class="label-overlay left">Before</div>
+    <div class="label-overlay right">After</div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-secondary" id="btnCopy" disabled>📋 Copy Image</button>
+    <button class="btn btn-primary" id="btnDownload" disabled>⬇️ Download PNG</button>
+  </div>
+</div>
+
+<script>
+const boxA = document.getElementById('boxA');
+const boxB = document.getElementById('boxB');
+const imgA = document.getElementById('imgA');
+const imgB = document.getElementById('imgB');
+const wrap = document.getElementById('compareWrap');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const handle = document.getElementById('handle');
+const btnCopy = document.getElementById('btnCopy');
+const btnDownload = document.getElementById('btnDownload');
+
+let srcA = null, srcB = null;
+let pos = 0.5; // slider position 0-1
+
+function loadImage(file, imgEl, box, setter) {
+  if (!file || !file.type.match(/^image\/(png|jpeg|webp)$/)) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    imgEl.src = e.target.result;
+    imgEl.onload = () => { box.classList.add('loaded'); setter(imgEl); tryActivate(); };
+  };
+  reader.readAsDataURL(file);
+}
+
+function tryActivate() {
+  if (!srcA || !srcB) return;
+  wrap.classList.add('active');
+  btnCopy.disabled = false;
+  btnDownload.disabled = false;
+  fitCanvas();
+  draw();
+}
+
+function fitCanvas() {
+  const rect = wrap.getBoundingClientRect();
+  const w = rect.width;
+  const h = rect.height;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  handle.style.left = (pos * 100) + '%';
+}
+
+function draw() {
+  const w = parseFloat(canvas.style.width);
+  const h = parseFloat(canvas.style.height);
+  ctx.clearRect(0, 0, w, h);
+
+  if (!srcA || !srcB) return;
+
+  // Helper: draw image covering the area (object-fit: cover)
+  function cover(img) {
+    const ir = img.naturalWidth / img.naturalHeight;
+    const cr = w / h;
+    let sw, sh, sx, sy;
+    if (ir > cr) { sh = img.naturalHeight; sw = sh * cr; sx = (img.naturalWidth - sw) / 2; sy = 0; }
+    else { sw = img.naturalWidth; sh = sw / cr; sx = 0; sy = (img.naturalHeight - sh) / 2; }
+    return { sx, sy, sw, sh };
+  }
+
+  const clipX = pos * w;
+
+  // Left side (Before)
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, clipX, h);
+  ctx.clip();
+  const a = cover(srcA);
+  ctx.drawImage(srcA, a.sx, a.sy, a.sw, a.sh, 0, 0, w, h);
+  ctx.restore();
+
+  // Right side (After)
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(clipX, 0, w - clipX, h);
+  ctx.clip();
+  const b = cover(srcB);
+  ctx.drawImage(srcB, b.sx, b.sy, b.sw, b.sh, 0, 0, w, h);
+  ctx.restore();
+}
+
+// Slider interaction
+let dragging = false;
+function startDrag(e) { dragging = true; moveDrag(e); }
+function moveDrag(e) {
+  if (!dragging) return;
+  e.preventDefault();
+  const rect = wrap.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  pos = Math.max(0.01, Math.min(0.99, (clientX - rect.left) / rect.width));
+  handle.style.left = (pos * 100) + '%';
+  draw();
+}
+function endDrag() { dragging = false; }
+
+handle.addEventListener('mousedown', startDrag);
+handle.addEventListener('touchstart', startDrag, { passive: false });
+window.addEventListener('mousemove', moveDrag);
+window.addEventListener('touchmove', moveDrag, { passive: false });
+window.addEventListener('mouseup', endDrag);
+window.addEventListener('touchend', endDrag);
+
+// Click on canvas to jump slider
+wrap.addEventListener('mousedown', e => { if (e.target === canvas) { dragging = true; moveDrag(e); } });
+wrap.addEventListener('touchstart', e => { if (e.target === canvas) { dragging = true; moveDrag(e); } }, { passive: false });
+
+// File inputs
+boxA.querySelector('input').addEventListener('change', e => loadImage(e.target.files[0], imgA, boxA, v => { srcA = v; }));
+boxB.querySelector('input').addEventListener('change', e => loadImage(e.target.files[0], imgB, boxB, v => { srcB = v; }));
+
+// Drag & drop
+['boxA','boxB'].forEach(id => {
+  const box = document.getElementById(id);
+  const imgEl = id === 'boxA' ? imgA : imgB;
+  const setter = id === 'boxA' ? v => { srcA = v; } : v => { srcB = v; };
+
+  box.addEventListener('dragover', e => { e.preventDefault(); box.classList.add('dragover'); });
+  box.addEventListener('dragleave', () => box.classList.remove('dragover'));
+  box.addEventListener('drop', e => {
+    e.preventDefault();
+    box.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    loadImage(file, imgEl, box, setter);
+  });
+
+  // Clear button
+  box.querySelector('.clear-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    box.classList.remove('loaded');
+    imgEl.src = '';
+    if (id === 'boxA') srcA = null; else srcB = null;
+    wrap.classList.remove('active');
+    btnCopy.disabled = true;
+    btnDownload.disabled = true;
+    box.querySelector('input').value = '';
+  });
+});
+
+// Export: produce a full-resolution composite at current slider position
+function getExportCanvas() {
+  const w = Math.max(srcA.naturalWidth, srcB.naturalWidth);
+  const h = Math.max(srcA.naturalHeight, srcB.naturalHeight);
+  const offscreen = document.createElement('canvas');
+  offscreen.width = w;
+  offscreen.height = h;
+  const octx = offscreen.getContext('2d');
+  const clipX = pos * w;
+
+  // Left
+  octx.save();
+  octx.beginPath();
+  octx.rect(0, 0, clipX, h);
+  octx.clip();
+  octx.drawImage(srcA, 0, 0, w, h);
+  octx.restore();
+
+  // Right
+  octx.save();
+  octx.beginPath();
+  octx.rect(clipX, 0, w - clipX, h);
+  octx.clip();
+  octx.drawImage(srcB, 0, 0, w, h);
+  octx.restore();
+
+  // Slider line
+  octx.fillStyle = '#22c55e';
+  octx.fillRect(clipX - 1.5, 0, 3, h);
+
+  return offscreen;
+}
+
+btnDownload.addEventListener('click', () => {
+  if (!srcA || !srcB) return;
+  const c = getExportCanvas();
+  const a = document.createElement('a');
+  a.download = 'image-comparison.png';
+  a.href = c.toDataURL('image/png');
+  a.click();
+});
+
+btnCopy.addEventListener('click', async () => {
+  if (!srcA || !srcB) return;
+  try {
+    const c = getExportCanvas();
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    btnCopy.textContent = '✅ Copied!';
+    setTimeout(() => { btnCopy.textContent = '📋 Copy Image'; }, 1500);
+  } catch {
+    btnCopy.textContent = '❌ Failed';
+    setTimeout(() => { btnCopy.textContent = '📋 Copy Image'; }, 1500);
+  }
+});
+
+// Resize
+window.addEventListener('resize', () => {
+  if (wrap.classList.contains('active')) { fitCanvas(); draw(); }
+});
+</script>
+</body>
+</html>

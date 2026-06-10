@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Mock Server Generator</title>
+<meta name="description" content="Generate mock API server code with custom endpoints.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--card:#111827;--card2:#1e293b;--accent:#22c55e;--accent-dim:#16a34a;--text:#e2e8f0;--text-dim:#94a3b8;--border:#1e293b;--danger:#ef4444;--warn:#f59e0b;--info:#3b82f6;--radius:8px;--mono:'JetBrains Mono','Fira Code','Cascadia Code',Consolas,monospace}
+html{font-size:15px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+.container{max-width:1200px;margin:0 auto;padding:1.5rem}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+header h1{font-size:1.5rem;font-weight:700;color:var(--accent)}
+header p{font-size:.85rem;color:var(--text-dim);margin-top:.2rem}
+.badge{display:inline-block;background:var(--accent);color:#000;font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:999px;vertical-align:middle;margin-left:.5rem}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border:none;border-radius:var(--radius);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:var(--accent-dim)}
+.btn-outline{background:transparent;color:var(--text-dim);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-sm{padding:.35rem .7rem;font-size:.75rem}
+.btn-icon{padding:.35rem;background:transparent;border:none;color:var(--text-dim);cursor:pointer;border-radius:4px;display:inline-flex;align-items:center}
+.btn-icon:hover{color:var(--danger);background:rgba(239,68,68,.1)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-header{padding:.75rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-header h2{font-size:.95rem;font-weight:600}
+.card-body{padding:1rem}
+
+/* Endpoint list */
+.endpoint-list{display:flex;flex-direction:column;gap:.6rem}
+.endpoint-row{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:.6rem .8rem;display:flex;align-items:center;gap:.6rem;font-size:.85rem;transition:border-color .15s}
+.endpoint-row:hover{border-color:var(--accent)}
+.method-badge{font-family:var(--mono);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;min-width:50px;text-align:center;flex-shrink:0}
+.method-GET{background:#22c55e22;color:#22c55e}
+.method-POST{background:#3b82f622;color:#3b82f6}
+.method-PUT{background:#f59e0b22;color:#f59e0b}
+.method-DELETE{background:#ef444422;color:#ef4444}
+.method-PATCH{background:#a855f722;color:#a855f7}
+.endpoint-path{font-family:var(--mono);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.endpoint-meta{color:var(--text-dim);font-size:.75rem;font-family:var(--mono)}
+
+/* Form */
+.form-group{margin-bottom:.8rem}
+.form-group label{display:block;font-size:.75rem;font-weight:600;color:var(--text-dim);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.5px}
+.form-row{display:flex;gap:.6rem}
+.form-row .form-group{flex:1}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:.5rem .7rem;color:var(--text);font-size:.85rem;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .7rem center}
+textarea{font-family:var(--mono);resize:vertical;min-height:100px;tab-size:2}
+input[type="number"]{font-family:var(--mono)}
+
+/* Code preview */
+.code-wrap{position:relative;background:var(--bg);border-radius:var(--radius);overflow:hidden;max-height:500px;overflow-y:auto}
+.code-wrap pre{margin:0;padding:1rem;font-family:var(--mono);font-size:.8rem;line-height:1.7;white-space:pre;overflow-x:auto;color:var(--text)}
+.code-wrap .copy-btn{position:absolute;top:.5rem;right:.5rem;z-index:2}
+.code-wrap::-webkit-scrollbar{width:6px;height:6px}
+.code-wrap::-webkit-scrollbar-track{background:var(--bg)}
+.code-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Syntax colors */
+.syn-kw{color:#c084fc}
+.syn-str{color:#86efac}
+.syn-num{color:#fbbf24}
+.syn-cm{color:#64748b;font-style:italic}
+.syn-fn{color:#67e8f9}
+.syn-op{color:#94a3b8}
+.syn-prop{color:#93c5fd}
+.syn-const{color:#f472b6}
+
+/* Templates dropdown */
+.dropdown{position:relative;display:inline-block}
+.dropdown-menu{display:none;position:absolute;top:100%;left:0;margin-top:.3rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);min-width:200px;z-index:10;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.dropdown.open .dropdown-menu{display:block}
+.dropdown-menu button{display:block;width:100%;text-align:left;padding:.6rem 1rem;background:none;border:none;color:var(--text);font-size:.85rem;cursor:pointer}
+.dropdown-menu button:hover{background:var(--card2)}
+.dropdown-menu button+button{border-top:1px solid var(--border)}
+
+/* Toast */
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--accent);color:#000;padding:.6rem 1.2rem;border-radius:var(--radius);font-weight:600;font-size:.85rem;transform:translateY(100px);opacity:0;transition:all .3s;z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:0}
+.tab{padding:.6rem 1rem;font-size:.8rem;font-weight:600;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab:hover{color:var(--text)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Config bar */
+.config-bar{display:flex;gap:1rem;align-items:center;padding:.8rem 1rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1rem;flex-wrap:wrap}
+.config-bar label{font-size:.75rem;color:var(--text-dim);font-weight:600}
+.config-bar input,.config-bar select{width:auto;min-width:80px;padding:.35rem .6rem;font-size:.8rem}
+.config-item{display:flex;align-items:center;gap:.4rem}
+
+/* Empty state */
+.empty{text-align:center;padding:2rem;color:var(--text-dim);font-size:.9rem}
+.empty svg{margin-bottom:.5rem;opacity:.4}
+
+/* Stats bar */
+.stats{display:flex;gap:1.5rem;font-size:.75rem;color:var(--text-dim);padding-top:.5rem}
+.stats span{display:flex;align-items:center;gap:.3rem}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <h1>API Mock Server Generator<span class="badge">v1.0</span></h1>
+      <p>Generate Express.js mock API server code with custom endpoints</p>
+    </div>
+    <div style="display:flex;gap:.5rem">
+      <div class="dropdown" id="templateDropdown">
+        <button class="btn btn-outline btn-sm" onclick="toggleDropdown()">📁 Templates</button>
+        <div class="dropdown-menu">
+          <button onclick="loadTemplate('rest')">🟢 REST API</button>
+          <button onclick="loadTemplate('graphql')">🟣 GraphQL Mock</button>
+          <button onclick="loadTemplate('auth')">🔐 Auth Flow</button>
+          <button onclick="loadTemplate('crud')">📦 CRUD Resource</button>
+          <button onclick="loadTemplate('empty')">🗑️ Clear All</button>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="exportProject()">⬇ Export JS</button>
+      <button class="btn btn-primary btn-sm" onclick="copyCode()">📋 Copy Code</button>
+    </div>
+  </header>
+
+  <div class="config-bar">
+    <div class="config-item">
+      <label>Port</label>
+      <input type="number" id="cfgPort" value="3001" min="1" max="65535" style="width:80px">
+    </div>
+    <div class="config-item">
+      <label>Base Path</label>
+      <input type="text" id="cfgBasePath" value="/api" placeholder="/api" style="width:100px">
+    </div>
+    <div class="config-item">
+      <label>CORS</label>
+      <select id="cfgCors" style="width:100px">
+        <option value="true" selected>Enabled</option>
+        <option value="false">Disabled</option>
+      </select>
+    </div>
+    <div class="config-item">
+      <label>Logging</label>
+      <select id="cfgLogging" style="width:100px">
+        <option value="true" selected>Enabled</option>
+        <option value="false">Disabled</option>
+      </select>
+    </div>
+    <div style="flex:1"></div>
+    <div class="stats" id="statsBar">
+      <span><span class="dot" style="background:var(--accent)"></span> <span id="statCount">0</span> endpoints</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Left: endpoints -->
+    <div>
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-header">
+          <h2>Add Endpoint</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group" style="flex:0 0 120px">
+              <label>Method</label>
+              <select id="epMethod">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:1">
+              <label>Path</label>
+              <input type="text" id="epPath" placeholder="/users/:id">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Response Body (JSON)</label>
+            <textarea id="epBody" rows="5" placeholder='{ "id": 1, "name": "John" }'></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Status Code</label>
+              <input type="number" id="epStatus" value="200" min="100" max="599">
+            </div>
+            <div class="form-group">
+              <label>Delay (ms)</label>
+              <input type="number" id="epDelay" value="0" min="0" max="30000">
+            </div>
+            <div class="form-group" style="display:flex;align-items:flex-end">
+              <button class="btn btn-primary" onclick="addEndpoint()" style="width:100%">+ Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Endpoints</h2>
+          <span style="font-size:.75rem;color:var(--text-dim)" id="epCountLabel">0 defined</span>
+        </div>
+        <div class="card-body" id="endpointList">
+          <div class="empty" id="emptyState">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <p>No endpoints yet. Add one above or load a template.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: code preview -->
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('express')">Express.js</button>
+        <button class="tab" onclick="switchTab('package')">package.json</button>
+      </div>
+      <div class="tab-content active" id="tab-express">
+        <div class="code-wrap">
+          <button class="btn btn-outline btn-sm copy-btn" onclick="copyCode()">📋</button>
+          <pre id="codePreview"></pre>
+        </div>
+      </div>
+      <div class="tab-content" id="tab-package">
+        <div class="code-wrap">
+          <button class="btn btn-outline btn-sm copy-btn" onclick="copyPackageJson()">📋</button>
+          <pre id="pkgPreview"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// State
+let endpoints = [];
+let editingId = null;
+
+// Helpers
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// JSON syntax highlighting
+function highlightJson(jsonStr) {
+  return escHtml(jsonStr).replace(
+    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+    function(match) {
+      let cls = 'syn-num';
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) {
+          cls = 'syn-prop';
+        } else {
+          cls = 'syn-str';
+        }
+      } else if (/true|false/.test(match)) {
+        cls = 'syn-const';
+      } else if (/null/.test(match)) {
+        cls = 'syn-const';
+      }
+      return '<span class="' + cls + '">' + match + '</span>';
+    }
+  );
+}
+
+// JS syntax highlighting (lightweight)
+function highlightJs(code) {
+  let html = escHtml(code);
+
+  // Comments
+  html = html.replace(/(\/\/.*)/g, '<span class="syn-cm">$1</span>');
+  html = html.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="syn-cm">$1</span>');
+
+  // Strings (single & double quotes, template literals)
+  html = html.replace(/(&#39;[^&#]*?&#39;|&quot;[^&]*?&quot;)/g, '<span class="syn-str">$1</span>');
+
+  // Keywords
+  const kw = ['const','let','var','function','return','if','else','for','while','switch','case','break','new','require','module','exports','async','await','try','catch','throw','typeof','instanceof','class','extends','import','from','default','true','false','null','undefined'];
+  kw.forEach(k => {
+    html = html.replace(new RegExp('\\b(' + k + ')\\b', 'g'), '<span class="syn-kw">$1</span>');
+  });
+
+  // Numbers
+  html = html.replace(/\b(\d+)\b/g, '<span class="syn-num">$1</span>');
+
+  // Function calls
+  html = html.replace(/\b([a-zA-Z_]\w*)\s*\(/g, '<span class="syn-fn">$1</span>(');
+
+  return html;
+}
+
+// Dropdown
+function toggleDropdown() {
+  document.getElementById('templateDropdown').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  const dd = document.getElementById('templateDropdown');
+  if (!dd.contains(e.target)) dd.classList.remove('open');
+});
+
+// Tabs
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab:nth-child(${tab === 'express' ? 1 : 2})`).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// Endpoint CRUD
+function addEndpoint() {
+  const method = document.getElementById('epMethod').value;
+  const path = document.getElementById('epPath').value.trim();
+  const bodyRaw = document.getElementById('epBody').value.trim();
+  const status = parseInt(document.getElementById('epStatus').value) || 200;
+  const delay = parseInt(document.getElementById('epDelay').value) || 0;
+
+  if (!path) { toast('Path is required'); return; }
+  if (!path.startsWith('/')) { toast('Path must start with /'); return; }
+
+  let body;
+  if (bodyRaw) {
+    try {
+      body = JSON.parse(bodyRaw);
+    } catch(e) {
+      toast('Invalid JSON: ' + e.message);
+      return;
+    }
+  } else {
+    body = { success: true };
+  }
+
+  if (editingId) {
+    const idx = endpoints.findIndex(e => e.id === editingId);
+    if (idx >= 0) {
+      endpoints[idx] = { ...endpoints[idx], method, path, body, status, delay };
+    }
+    editingId = null;
+    document.querySelector('#endpointList .form-actions-cancel')?.remove();
+  } else {
+    endpoints.push({ id: uid(), method, path, body, status, delay });
+  }
+
+  // Reset form
+  document.getElementById('epPath').value = '';
+  document.getElementById('epBody').value = '';
+  document.getElementById('epStatus').value = '200';
+  document.getElementById('epDelay').value = '0';
+  document.getElementById('epMethod').value = 'GET';
+
+  render();
+  toast('Endpoint added');
+}
+
+function removeEndpoint(id) {
+  endpoints = endpoints.filter(e => e.id !== id);
+  render();
+  toast('Endpoint removed');
+}
+
+function editEndpoint(id) {
+  const ep = endpoints.find(e => e.id === id);
+  if (!ep) return;
+  document.getElementById('epMethod').value = ep.method;
+  document.getElementById('epPath').value = ep.path;
+  document.getElementById('epBody').value = JSON.stringify(ep.body, null, 2);
+  document.getElementById('epStatus').value = ep.status;
+  document.getElementById('epDelay').value = ep.delay;
+  editingId = id;
+  document.getElementById('epPath').focus();
+}
+
+// Render
+function render() {
+  const list = document.getElementById('endpointList');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('statCount').textContent = endpoints.length;
+  document.getElementById('epCountLabel').textContent = endpoints.length + ' defined';
+
+  if (endpoints.length === 0) {
+    list.innerHTML = '';
+    list.appendChild(createEmpty());
+    genCode();
+    return;
+  }
+
+  list.innerHTML = '<div class="endpoint-list">' + endpoints.map(ep => {
+    const bodyStr = JSON.stringify(ep.body);
+    const preview = bodyStr.length > 60 ? bodyStr.slice(0, 57) + '...' : bodyStr;
+    return `<div class="endpoint-row">
+      <span class="method-badge method-${ep.method}">${ep.method}</span>
+      <span class="endpoint-path" title="${escHtml(ep.path)}">${escHtml(ep.path)}</span>
+      <span class="endpoint-meta">${ep.status}</span>
+      ${ep.delay ? '<span class="endpoint-meta" style="color:var(--warn)">' + ep.delay + 'ms</span>' : ''}
+      <button class="btn-icon" title="Edit" onclick="editEndpoint('${ep.id}')">✏️</button>
+      <button class="btn-icon" title="Delete" onclick="removeEndpoint('${ep.id}')">🗑️</button>
+    </div>`;
+  }).join('') + '</div>';
+
+  genCode();
+}
+
+function createEmpty() {
+  const d = document.createElement('div');
+  d.className = 'empty';
+  d.id = 'emptyState';
+  d.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><p>No endpoints yet. Add one above or load a template.</p>';
+  return d;
+}
+
+// Code generation
+function genCode() {
+  const port = document.getElementById('cfgPort').value || '3001';
+  const basePath = document.getElementById('cfgBasePath').value.trim() || '';
+  const cors = document.getElementById('cfgCors').value === 'true';
+  const logging = document.getElementById('cfgLogging').value === 'true';
+
+  let code = `// API Mock Server - Generated by API Mock Server Generator\n`;
+  code += `// Run: npm install express cors (if needed), then: node server.js\n\n`;
+  code += `const express = require('express');\n`;
+  if (cors) code += `const cors = require('cors');\n`;
+  code += `\nconst app = express();\n`;
+  code += `const PORT = ${port};\n\n`;
+  code += `// Middleware\n`;
+  code += `app.use(express.json());\n`;
+  if (cors) code += `app.use(cors());\n`;
+  if (logging) {
+    code += `\n// Request logging\n`;
+    code += `app.use((req, res, next) => {\n`;
+    code += `  console.log(\`[\${new Date().toISOString()}] \${req.method} \${req.url}\`);\n`;
+    code += `  next();\n`;
+    code += `});\n`;
+  }
+  code += `\n`;
+
+  if (endpoints.length === 0) {
+    code += `// No endpoints defined yet\n`;
+    code += `// Add endpoints using the generator, then paste them here\n\n`;
+  } else {
+    code += `// ── Endpoints ────────────────────────────────────────\n\n`;
+    endpoints.forEach(ep => {
+      const routePath = basePath + ep.path;
+      const bodyJson = JSON.stringify(ep.body, null, 4);
+      code += `// ${ep.method} ${routePath} → ${ep.status}\n`;
+      code += `app.${ep.method.toLowerCase()}('${routePath}', (req, res) => {\n`;
+      if (ep.delay > 0) {
+        code += `  setTimeout(() => {\n`;
+        code += `    res.status(${ep.status}).json(${bodyJson});\n`;
+        code += `  }, ${ep.delay});\n`;
+      } else {
+        code += `  res.status(${ep.status}).json(${bodyJson});\n`;
+      }
+      code += `});\n\n`;
+    });
+  }
+
+  code += `// Catch-all\n`;
+  code += `app.use((req, res) => {\n`;
+  code += `  res.status(404).json({ error: 'Not Found', method: req.method, path: req.url });\n`;
+  code += `});\n\n`;
+  code += `app.listen(PORT, () => {\n`;
+  code += `  console.log(\`\\n🚀 Mock API server running at http://localhost:\${PORT}\`);\n`;
+  if (basePath) code += `  console.log(\`   Base path: ${basePath}\`);\n`;
+  code += `  console.log(\`   ${endpoints.length} endpoint(s) loaded\\n\`);\n`;
+  code += `});\n`;
+
+  document.getElementById('codePreview').innerHTML = highlightJs(code);
+
+  // package.json
+  const pkg = JSON.stringify({
+    name: "mock-api-server",
+    version: "1.0.0",
+    description: "Generated mock API server",
+    main: "server.js",
+    scripts: { start: "node server.js" },
+    dependencies: Object.assign(
+      { express: "^4.18.2" },
+      cors ? { cors: "^2.8.5" } : {}
+    )
+  }, null, 2);
+  document.getElementById('pkgPreview').innerHTML = highlightJson(pkg);
+}
+
+// Copy
+function copyCode() {
+  const el = document.getElementById('codePreview');
+  navigator.clipboard.writeText(el.textContent).then(() => toast('Code copied!'));
+}
+
+function copyPackageJson() {
+  const el = document.getElementById('pkgPreview');
+  navigator.clipboard.writeText(el.textContent).then(() => toast('package.json copied!'));
+}
+
+// Export
+function exportProject() {
+  const code = document.getElementById('codePreview').textContent;
+  const blob = new Blob([code], { type: 'text/javascript' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'server.js';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('server.js downloaded');
+}
+
+// Templates
+const templates = {
+  rest: [
+    { method: 'GET', path: '/users', body: [{ id: 1, name: "Alice", email: "alice@example.com" }, { id: 2, name: "Bob", email: "bob@example.com" }], status: 200, delay: 100 },
+    { method: 'GET', path: '/users/:id', body: { id: 1, name: "Alice", email: "alice@example.com", role: "admin" }, status: 200, delay: 50 },
+    { method: 'POST', path: '/users', body: { id: 3, name: "Charlie", email: "charlie@example.com", createdAt: "2026-06-10T00:00:00Z" }, status: 201, delay: 150 },
+    { method: 'PUT', path: '/users/:id', body: { id: 1, name: "Alice Updated", email: "alice@example.com", role: "admin" }, status: 200, delay: 100 },
+    { method: 'DELETE', path: '/users/:id', body: { success: true, message: "User deleted" }, status: 200, delay: 50 },
+    { method: 'GET', path: '/products', body: [{ id: 1, name: "Widget", price: 29.99 }, { id: 2, name: "Gadget", price: 49.99 }], status: 200, delay: 100 },
+    { method: 'GET', path: '/products/:id', body: { id: 1, name: "Widget", price: 29.99, inStock: true }, status: 200, delay: 50 },
+  ],
+  graphql: [
+    { method: 'POST', path: '/graphql', body: { data: { users: [{ id: 1, name: "Alice", posts: [{ id: 1, title: "Hello World" }] }] } } }, status: 200, delay: 100 },
+    { method: 'POST', path: '/graphql', body: { data: { user: { id: 1, name: "Alice", email: "alice@example.com" } } }, status: 200, delay: 50 },
+    { method: 'GET', path: '/graphql', body: { data: { __schema: { types: [{ name: "Query" }, { name: "Mutation" }] } } }, status: 200, delay: 0 },
+    { method: 'POST', path: '/graphql', body: { errors: [{ message: "Not authenticated" }] }, status: 401, delay: 0 },
+  ],
+  auth: [
+    { method: 'POST', path: '/auth/login', body: { token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjF9.stub", user: { id: 1, email: "user@example.com", name: "Demo User" } }, status: 200, delay: 300 },
+    { method: 'POST', path: '/auth/register', body: { id: 1, email: "user@example.com", name: "Demo User", createdAt: "2026-06-10T00:00:00Z" }, status: 201, delay: 400 },
+    { method: 'POST', path: '/auth/logout', body: { success: true }, status: 200, delay: 100 },
+    { method: 'POST', path: '/auth/refresh', body: { token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjF9.stub2", expiresIn: 3600 }, status: 200, delay: 200 },
+    { method: 'GET', path: '/auth/me', body: { id: 1, email: "user@example.com", name: "Demo User", role: "admin" }, status: 200, delay: 50 },
+    { method: 'POST', path: '/auth/forgot-password', body: { success: true, message: "Reset email sent" }, status: 200, delay: 500 },
+    { method: 'POST', path: '/auth/reset-password', body: { success: true }, status: 200, delay: 300 },
+    { method: 'GET', path: '/auth/verify', body: { valid: true, user: { id: 1 } }, status: 200, delay: 50 },
+  ],
+  crud: [
+    { method: 'GET', path: '/items', body: { data: [{ id: 1, name: "Item 1", status: "active" }, { id: 2, name: "Item 2", status: "draft" }], total: 2, page: 1 }, status: 200, delay: 80 },
+    { method: 'GET', path: '/items/:id', body: { id: 1, name: "Item 1", status: "active", createdAt: "2026-01-01T00:00:00Z" }, status: 200, delay: 40 },
+    { method: 'POST', path: '/items', body: { id: 3, name: "New Item", status: "draft", createdAt: "2026-06-10T00:00:00Z" }, status: 201, delay: 120 },
+    { method: 'PUT', path: '/items/:id', body: { id: 1, name: "Updated Item", status: "active", updatedAt: "2026-06-10T00:00:00Z" }, status: 200, delay: 100 },
+    { method: 'PATCH', path: '/items/:id', body: { id: 1, status: "archived" }, status: 200, delay: 80 },
+    { method: 'DELETE', path: '/items/:id', body: { success: true }, status: 204, delay: 60 },
+  ]
+};
+
+function loadTemplate(name) {
+  document.getElementById('templateDropdown').classList.remove('open');
+  if (name === 'empty') {
+    endpoints = [];
+  } else if (templates[name]) {
+    endpoints = templates[name].map(ep => ({ ...ep, id: uid(), body: JSON.parse(JSON.stringify(ep.body)) }));
+  }
+  editingId = null;
+  render();
+  toast(name === 'empty' ? 'Cleared' : 'Template loaded: ' + name.toUpperCase());
+}
+
+// Config change → regenerate
+['cfgPort','cfgBasePath','cfgCors','cfgLogging'].forEach(id => {
+  document.getElementById(id).addEventListener('input', genCode);
+  document.getElementById(id).addEventListener('change', genCode);
+});
+
+// Keyboard shortcut
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') addEndpoint();
+});
+
+// Init
+render();
+</script>
+</body>
+</html>

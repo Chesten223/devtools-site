@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cron Expression Builder</title>
+<meta name="description" content="Build and validate cron expressions with visual builder and next run time calculator.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a0a;color:#e5e7eb;line-height:1.6;min-height:100vh}
+a{color:#22c55e;text-decoration:none}
+.container{max-width:900px;margin:0 auto;padding:1.5rem}
+h1{font-size:1.75rem;font-weight:700;color:#f9fafb;margin-bottom:.25rem}
+.subtitle{color:#9ca3af;font-size:.95rem;margin-bottom:1.5rem}
+.card{background:#111827;border:1px solid #1f2937;border-radius:.75rem;padding:1.25rem;margin-bottom:1.25rem}
+.card h2{font-size:1.1rem;font-weight:600;color:#f9fafb;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.card h2 .icon{font-size:1.2rem}
+label{display:block;font-size:.8rem;color:#9ca3af;margin-bottom:.3rem;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+select,input[type="text"]{width:100%;background:#0a0a0a;border:1px solid #374151;border-radius:.5rem;padding:.55rem .75rem;color:#e5e7eb;font-size:.9rem;outline:none;transition:border-color .15s}
+select:focus,input[type="text"]:focus{border-color:#22c55e}
+select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .75rem center}
+.toggle-row{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}
+.toggle{position:relative;width:44px;height:24px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{position:absolute;inset:0;background:#374151;border-radius:24px;transition:background .2s}
+.toggle .slider::before{content:'';position:absolute;left:3px;top:3px;width:18px;height:18px;background:#e5e7eb;border-radius:50%;transition:transform .2s}
+.toggle input:checked+.slider{background:#22c55e}
+.toggle input:checked+.slider::before{transform:translateX(20px)}
+.toggle-label{font-size:.85rem;color:#d1d5db}
+.fields-grid{display:grid;gap:.75rem;margin-bottom:1rem}
+.fields-grid.five{grid-template-columns:repeat(5,1fr)}
+.fields-grid.six{grid-template-columns:repeat(6,1fr)}
+@media(max-width:600px){.fields-grid.five,.fields-grid.six{grid-template-columns:repeat(3,1fr)}}
+.presets{display:flex;flex-wrap:wrap;gap:.5rem}
+.preset-btn{background:#1f2937;border:1px solid #374151;border-radius:.5rem;padding:.4rem .85rem;color:#d1d5db;font-size:.82rem;cursor:pointer;transition:all .15s}
+.preset-btn:hover{background:#22c55e;color:#0a0a0a;border-color:#22c55e}
+.expression-display{display:flex;align-items:center;gap:.75rem;background:#0a0a0a;border:1px solid #374151;border-radius:.5rem;padding:.65rem 1rem;margin-bottom:.75rem}
+.expression-display code{flex:1;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:1.1rem;color:#22c55e;word-break:break-all}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .85rem;border-radius:.5rem;font-size:.82rem;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s}
+.btn-copy{background:#1f2937;border-color:#374151;color:#d1d5db}
+.btn-copy:hover{background:#22c55e;color:#0a0a0a;border-color:#22c55e}
+.btn-copy.copied{background:#22c55e;color:#0a0a0a;border-color:#22c55e}
+.btn-export{background:#1f2937;border-color:#374151;color:#d1d5db}
+.btn-export:hover{background:#374151}
+.btn-validate{background:#22c55e;color:#0a0a0a;font-weight:600;border-color:#22c55e}
+.btn-validate:hover{background:#16a34a}
+.btn-reset{background:transparent;border-color:#374151;color:#9ca3af}
+.btn-reset:hover{border-color:#ef4444;color:#ef4444}
+.actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem}
+.description-box{background:#0a0a0a;border-radius:.5rem;padding:.75rem 1rem;font-size:.9rem;color:#d1d5db;border-left:3px solid #22c55e}
+.error-box{background:#0a0a0a;border-radius:.5rem;padding:.75rem 1rem;font-size:.9rem;color:#f87171;border-left:3px solid #ef4444;display:none}
+.error-box.visible{display:block}
+.manual-input{display:flex;gap:.5rem;margin-bottom:.75rem}
+.manual-input input{flex:1;font-family:'SF Mono',Monaco,Consolas,monospace}
+.run-times-list{list-style:none;counter-reset:runs}
+.run-times-list li{padding:.45rem 0;border-bottom:1px solid #1f2937;font-size:.88rem;counter-increment:runs;display:flex;align-items:baseline;gap:.5rem}
+.run-times-list li:last-child{border-bottom:none}
+.run-times-list li::before{content:counter(runs) '.';color:#22c55e;font-weight:600;font-size:.8rem;min-width:1.5rem}
+.run-times-list .run-date{color:#f9fafb;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:.85rem}
+.run-times-list .run-relative{color:#6b7280;font-size:.78rem;margin-left:auto}
+.empty-state{color:#6b7280;text-align:center;padding:1.5rem;font-size:.9rem}
+footer{text-align:center;padding:2rem 0 1rem;color:#6b7280;font-size:.78rem}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Cron Expression Builder</h1>
+  <p class="subtitle">Build, validate, and understand cron expressions with a visual interface.</p>
+
+  <!-- Mode toggle -->
+  <div class="card">
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="sixFieldToggle">
+        <span class="slider"></span>
+      </label>
+      <span class="toggle-label">Include seconds field (6-field cron)</span>
+    </div>
+
+    <!-- Presets -->
+    <h2><span class="icon">⚡</span> Presets</h2>
+    <div class="presets" id="presets"></div>
+  </div>
+
+  <!-- Visual builder -->
+  <div class="card">
+    <h2><span class="icon">🔧</span> Visual Builder</h2>
+    <div class="fields-grid five" id="fieldsGrid"></div>
+  </div>
+
+  <!-- Expression output -->
+  <div class="card">
+    <h2><span class="icon">📄</span> Expression</h2>
+    <div class="expression-display">
+      <code id="expressionOutput">* * * * *</code>
+      <button class="btn btn-copy" id="copyBtn" title="Copy expression">📋 Copy</button>
+    </div>
+    <div class="actions">
+      <button class="btn btn-reset" id="resetBtn">↺ Reset</button>
+      <button class="btn btn-export" id="exportBtn">⬇ Export</button>
+    </div>
+
+    <!-- Manual input -->
+    <label>Or type/paste a cron expression</label>
+    <div class="manual-input">
+      <input type="text" id="manualInput" placeholder="* * * * *" spellcheck="false">
+      <button class="btn btn-validate" id="applyManualBtn">Apply</button>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+    <div class="description-box" id="descriptionBox">Every minute</div>
+  </div>
+
+  <!-- Next run times -->
+  <div class="card">
+    <h2><span class="icon">🕐</span> Next 10 Run Times <span style="font-weight:400;font-size:.8rem;color:#6b7280">(UTC)</span></h2>
+    <ul class="run-times-list" id="runTimesList">
+      <li class="empty-state">Enter a valid cron expression to see upcoming run times.</li>
+    </ul>
+  </div>
+
+  <footer>Cron Expression Builder — Free Online Developer Tool</footer>
+</div>
+
+<script>
+(function() {
+  // ── Constants ──
+  const FIVE_FIELDS = [
+    { key:'minute',     label:'Minute',      min:0, max:59 },
+    { key:'hour',       label:'Hour',        min:0, max:23 },
+    { key:'dom',        label:'Day of Month', min:1, max:31 },
+    { key:'month',      label:'Month',       min:1, max:12 },
+    { key:'dow',        label:'Day of Week',  min:0, max:7  }
+  ];
+  const SIX_FIELDS = [{ key:'second', label:'Second', min:0, max:59 }].concat(FIVE_FIELDS);
+
+  const MONTH_NAMES = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+  const PRESETS_5 = [
+    { label:'Every minute',     expr:'* * * * *' },
+    { label:'Every 5 minutes',  expr:'*/5 * * * *' },
+    { label:'Every 15 minutes', expr:'*/15 * * * *' },
+    { label:'Every 30 minutes', expr:'*/30 * * * *' },
+    { label:'Hourly',           expr:'0 * * * *' },
+    { label:'Daily at midnight',expr:'0 0 * * *' },
+    { label:'Daily at noon',    expr:'0 12 * * *' },
+    { label:'Weekly on Monday', expr:'0 0 * * 1' },
+    { label:'Monthly on 1st',   expr:'0 0 1 * *' },
+    { label:'Yearly (Jan 1)',   expr:'0 0 1 1 *' }
+  ];
+  const PRESETS_6 = [
+    { label:'Every second',      expr:'* * * * * *' },
+    { label:'Every minute',      expr:'0 * * * * *' },
+    { label:'Every 5 minutes',   expr:'0 */5 * * * *' },
+    { label:'Every 15 minutes',  expr:'0 */15 * * * *' },
+    { label:'Hourly',            expr:'0 0 * * * *' },
+    { label:'Daily at midnight', expr:'0 0 0 * * *' },
+    { label:'Daily at noon',     expr:'0 0 12 * * *' },
+    { label:'Weekly on Monday',  expr:'0 0 0 * * 1' },
+    { label:'Monthly on 1st',    expr:'0 0 0 1 * *' },
+    { label:'Yearly (Jan 1)',    expr:'0 0 0 1 1 *' }
+  ];
+
+  // ── State ──
+  let isSixField = false;
+  let fieldValues = {};
+
+  // ── DOM refs ──
+  const $toggle     = document.getElementById('sixFieldToggle');
+  const $presets    = document.getElementById('presets');
+  const $grid       = document.getElementById('fieldsGrid');
+  const $output     = document.getElementById('expressionOutput');
+  const $copyBtn    = document.getElementById('copyBtn');
+  const $resetBtn   = document.getElementById('resetBtn');
+  const $exportBtn  = document.getElementById('exportBtn');
+  const $manual     = document.getElementById('manualInput');
+  const $applyManual= document.getElementById('applyManualBtn');
+  const $errorBox   = document.getElementById('errorBox');
+  const $descBox    = document.getElementById('descriptionBox');
+  const $runList    = document.getElementById('runTimesList');
+
+  // ── Helpers ──
+  function getFields() { return isSixField ? SIX_FIELDS : FIVE_FIELDS; }
+
+  function buildExpression() {
+    return getFields().map(f => fieldValues[f.key] || '*').join(' ');
+  }
+
+  // Parse a single cron field value into a set of matching numbers
+  function parseField(field, min, max) {
+    const result = new Set();
+    if (field === '*') {
+      for (let i = min; i <= max; i++) result.add(i === 7 && min === 0 ? 0 : i);
+      return result;
+    }
+
+    const parts = field.split(',');
+    for (const part of parts) {
+      let stepParts = part.split('/');
+      const range = stepParts[0].trim();
+      const step = stepParts.length > 1 ? parseInt(stepParts[1], 10) : 1;
+
+      let start, end;
+      if (range === '*') {
+        start = min; end = max;
+      } else if (range.includes('-')) {
+        const [a, b] = range.split('-');
+        start = parseInt(a, 10);
+        end = parseInt(b, 10);
+      } else {
+        start = parseInt(range, 10);
+        end = start;
+      }
+
+      for (let i = start; i <= end; i += step) {
+        result.add(i);
+      }
+    }
+    return result;
+  }
+
+  function validate(expr) {
+    const parts = expr.trim().split(/\s+/);
+    const expected = isSixField ? 6 : 5;
+    if (parts.length !== expected) {
+      return { valid: false, error: `Expected ${expected} fields, got ${parts.length}.` };
+    }
+    const fields = getFields();
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i];
+      const f = fields[i];
+      // Validate each sub-expression
+      const segments = p.split(',');
+      for (const seg of segments) {
+        let rangePart = seg.split('/')[0];
+        let lo, hi;
+        if (rangePart === '*') {
+          lo = f.min; hi = f.max;
+        } else if (rangePart.includes('-')) {
+          const [a, b] = rangePart.split('-');
+          lo = parseInt(a, 10); hi = parseInt(b, 10);
+          if (isNaN(lo) || isNaN(hi)) return { valid: false, error: `Invalid range "${rangePart}" in ${f.label} field.` };
+        } else {
+          lo = parseInt(rangePart, 10);
+          hi = lo;
+          if (isNaN(lo)) return { valid: false, error: `Invalid value "${rangePart}" in ${f.label} field.` };
+        }
+        if (lo < f.min || hi > f.max) {
+          return { valid: false, error: `${f.label} value out of range (${f.min}–${f.max}): "${rangePart}".` };
+        }
+        // dow: 7 is alias for 0 (Sunday)
+        if (f.key === 'dow' && (lo === 7)) { /* ok */ }
+        else if (lo > hi) {
+          return { valid: false, error: `Invalid range in ${f.label}: start (${lo}) > end (${hi}).` };
+        }
+        if (seg.includes('/')) {
+          const step = parseInt(seg.split('/')[1], 10);
+          if (isNaN(step) || step < 1) return { valid: false, error: `Invalid step in ${f.label} field.` };
+        }
+      }
+    }
+    return { valid: true, error: null };
+  }
+
+  // ── Human-readable description ──
+  function describe(expr) {
+    const parts = expr.trim().split(/\s+/);
+    const f = getFields();
+    const offset = isSixField ? 0 : 1;
+    // indexes: seconds=0(if 6), minute=offset, hour=offset+1, dom=offset+2, month=offset+3, dow=offset+4
+    const sec   = isSixField ? parts[0] : null;
+    const min   = parts[offset];
+    const hour  = parts[offset + 1];
+    const dom   = parts[offset + 2];
+    const month = parts[offset + 3];
+    const dow   = parts[offset + 4];
+
+    const segments = [];
+
+    // Frequency root
+    if (min === '*' && hour === '*' && dom === '*' && month === '*' && dow === '*') {
+      if (sec === '*') return 'Every second';
+      if (sec.startsWith('*/')) return `Every ${sec.split('/')[1]} seconds`;
+      return `At second ${sec} of every minute`;
+    }
+
+    if (min.startsWith('*/') && hour === '*' && dom === '*' && month === '*' && dow === '*') {
+      return `Every ${min.split('/')[1]} minutes`;
+    }
+
+    if (hour.startsWith('*/') && min === '0' && dom === '*' && month === '*' && dow === '*') {
+      return `Every ${hour.split('/')[1]} hours`;
+    }
+
+    // Time part
+    let timeStr = '';
+    if (min === '*' && hour === '*') {
+      timeStr = 'every minute of every hour';
+    } else if (hour === '*') {
+      timeStr = describeField(min, 'minute');
+    } else {
+      const h = parseInt(hour, 10);
+      const m = parseInt(min, 10);
+      if (!isNaN(h) && !isNaN(m)) {
+        timeStr = `at ${pad(h)}:${pad(m)}`;
+      } else {
+        timeStr = `at minute ${min}, hour ${hour}`;
+      }
+    }
+
+    if (sec && sec !== '*' && sec !== '0') {
+      timeStr += `, second ${sec}`;
+    }
+
+    // Date part
+    let dateStr = '';
+    if (dom !== '*' && month !== '*' && dow !== '*') {
+      const d = parseInt(dom, 10);
+      const mo = parseInt(month, 10);
+      const w = parseInt(dow, 10);
+      dateStr = `on day ${d} of ${MONTH_NAMES[mo]} and on ${DOW_NAMES[w]}`;
+    } else if (dom !== '*' && month !== '*') {
+      const d = parseInt(dom, 10);
+      const mo = parseInt(month, 10);
+      dateStr = `on ${MONTH_NAMES[mo]} ${d}`;
+    } else if (dom !== '*' && dow !== '*') {
+      const d = parseInt(dom, 10);
+      const w = parseInt(dow, 10);
+      dateStr = `on day ${d} and on ${DOW_NAMES[w]}`;
+    } else if (dow !== '*') {
+      dateStr = describeField(dow, 'dow');
+    } else if (dom !== '*') {
+      dateStr = `on day ${describeField(dom, 'dom')} of the month`;
+    } else if (month !== '*') {
+      dateStr = `in ${describeField(month, 'month')}`;
+    }
+
+    let result = '';
+    if (dateStr) {
+      result = `${timeStr}, ${dateStr}`;
+    } else {
+      result = timeStr;
+    }
+
+    // Capitalize first letter
+    return result.charAt(0).toUpperCase() + result.slice(1);
+  }
+
+  function describeField(val, type) {
+    if (val === '*') return 'every';
+    if (val.includes('/')) {
+      const [range, step] = val.split('/');
+      if (range === '*') {
+        const names = { minute:'minute', hour:'hour', dom:'day of month', month:'month', dow:'day of week' };
+        return `every ${step} ${names[type]}s`;
+      }
+      return `every ${step} ${type}s from ${range.replace('-', ' to ')}`;
+    }
+    if (val.includes('-')) {
+      const [a, b] = val.split('-');
+      if (type === 'dow') return `${DOW_NAMES[parseInt(a)]} through ${DOW_NAMES[parseInt(b)]}`;
+      if (type === 'month') return `${MONTH_NAMES[parseInt(a)]} through ${MONTH_NAMES[parseInt(b)]}`;
+      return `${a} through ${b}`;
+    }
+    if (val.includes(',')) {
+      const items = val.split(',');
+      if (type === 'dow') return items.map(i => DOW_NAMES[parseInt(i)]).join(', ');
+      if (type === 'month') return items.map(i => MONTH_NAMES[parseInt(i)]).join(', ');
+      return items.join(', ');
+    }
+    const n = parseInt(val, 10);
+    if (type === 'dow') return DOW_NAMES[n] || val;
+    if (type === 'month') return MONTH_NAMES[n] || val;
+    return val;
+  }
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  // ── Next N run times ──
+  function computeNextRuns(expr, count) {
+    const parts = expr.trim().split(/\s+/);
+    const offset = isSixField ? 0 : 1;
+    const secSet   = isSixField ? parseField(parts[0], 0, 59) : new Set([0]);
+    const minSet   = parseField(parts[offset], 0, 59);
+    const hourSet  = parseField(parts[offset+1], 0, 23);
+    const domSet   = parseField(parts[offset+2], 1, 31);
+    const monthSet = parseField(parts[offset+3], 1, 12);
+    // dow: normalize 7→0
+    let dowRaw = parseField(parts[offset+4], 0, 7);
+    const dowSet = new Set();
+    dowRaw.forEach(v => dowSet.add(v === 7 ? 0 : v));
+
+    const results = [];
+    // Start from current time + 1 second
+    let d = new Date();
+    d.setUTCSeconds(d.getUTCSeconds() + 1);
+    if (!isSixField) d.setUTCSeconds(0);
+    d.setUTCMilliseconds(0);
+
+    const limit = new Date(d.getTime() + 365 * 4 * 24 * 3600 * 1000); // 4yr safety
+    let safety = 0;
+
+    while (results.length < count && d < limit && safety < 100000) {
+      safety++;
+      if (!monthSet.has(d.getUTCMonth() + 1)) {
+        // Skip to next month
+        d.setUTCMonth(d.getUTCMonth() + 1, 1);
+        d.setUTCHours(0, 0, 0, 0);
+        continue;
+      }
+      if (!domSet.has(d.getUTCDate()) || !dowSet.has(d.getUTCDay())) {
+        d.setUTCDate(d.getUTCDate() + 1);
+        d.setUTCHours(0, 0, 0, 0);
+        continue;
+      }
+      if (!hourSet.has(d.getUTCHours())) {
+        d.setUTCHours(d.getUTCHours() + 1, 0, 0, 0);
+        continue;
+      }
+      if (!minSet.has(d.getUTCMinutes())) {
+        d.setUTCMinutes(d.getUTCMinutes() + 1, 0, 0);
+        continue;
+      }
+      if (!secSet.has(d.getUTCSeconds())) {
+        d.setUTCSeconds(d.getUTCSeconds() + 1, 0);
+        continue;
+      }
+      results.push(new Date(d.getTime()));
+      // Advance by smallest unit
+      if (isSixField) {
+        d.setUTCSeconds(d.getUTCSeconds() + 1);
+      } else {
+        d.setUTCMinutes(d.getUTCMinutes() + 1);
+      }
+    }
+    return results;
+  }
+
+  function formatUTC(d) {
+    return d.getUTCFullYear() + '-' +
+      pad(d.getUTCMonth()+1) + '-' +
+      pad(d.getUTCDate()) + ' ' +
+      pad(d.getUTCHours()) + ':' +
+      pad(d.getUTCMinutes()) + ':' +
+      pad(d.getUTCSeconds());
+  }
+
+  function relativeTime(d) {
+    const now = new Date();
+    const diff = d.getTime() - now.getTime();
+    if (diff < 0) return 'past';
+    const secs = Math.floor(diff / 1000);
+    if (secs < 60) return `${secs}s from now`;
+    const mins = Math.floor(secs / 60);
+    if (mins < 60) return `${mins}m from now`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ${mins%60}m from now`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ${hrs%24}h from now`;
+  }
+
+  // ── Render ──
+  function renderPresets() {
+    const list = isSixField ? PRESETS_6 : PRESETS_5;
+    $presets.innerHTML = '';
+    list.forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'preset-btn';
+      btn.textContent = p.label;
+      btn.addEventListener('click', () => applyExpression(p.expr));
+      $presets.appendChild(btn);
+    });
+  }
+
+  function buildFieldOptions(field) {
+    const opts = [{ value: '*', text: '* (Any)' }];
+    // Range patterns
+    opts.push({ value: `*/2`, text: `Every 2nd` });
+    opts.push({ value: `*/5`, text: `Every 5th` });
+    opts.push({ value: `*/10`, text: `Every 10th` });
+    opts.push({ value: `*/15`, text: `Every 15th` });
+    // Specific values
+    for (let i = field.min; i <= field.max; i++) {
+      let label = String(i);
+      if (field.key === 'month') label = `${i} (${MONTH_NAMES[i].slice(0,3)})`;
+      else if (field.key === 'dow') label = `${i} (${DOW_NAMES[i].slice(0,3)})`;
+      opts.push({ value: String(i), text: label });
+    }
+    return opts;
+  }
+
+  function renderFields() {
+    const fields = getFields();
+    $grid.className = 'fields-grid ' + (isSixField ? 'six' : 'five');
+    $grid.innerHTML = '';
+    // Init defaults
+    fieldValues = {};
+    fields.forEach(f => fieldValues[f.key] = '*');
+
+    fields.forEach(field => {
+      const wrap = document.createElement('div');
+      const lbl = document.createElement('label');
+      lbl.textContent = field.label;
+      lbl.setAttribute('for', 'field-' + field.key);
+      const sel = document.createElement('select');
+      sel.id = 'field-' + field.key;
+      buildFieldOptions(field).forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.value;
+        opt.textContent = o.text;
+        sel.appendChild(opt);
+      });
+      sel.value = '*';
+      sel.addEventListener('change', () => {
+        fieldValues[field.key] = sel.value;
+        updateOutput();
+      });
+      wrap.appendChild(lbl);
+      wrap.appendChild(sel);
+      $grid.appendChild(wrap);
+    });
+  }
+
+  function setDropdownsFromExpr(expr) {
+    const parts = expr.trim().split(/\s+/);
+    const fields = getFields();
+    fields.forEach((f, i) => {
+      fieldValues[f.key] = parts[i] || '*';
+      const sel = document.getElementById('field-' + f.key);
+      if (sel) {
+        // Check if the option exists
+        const exists = Array.from(sel.options).some(o => o.value === parts[i]);
+        if (exists) {
+          sel.value = parts[i];
+        } else {
+          // Add custom option
+          const opt = document.createElement('option');
+          opt.value = parts[i];
+          opt.textContent = parts[i] + ' (custom)';
+          sel.appendChild(opt);
+          sel.value = parts[i];
+        }
+      }
+    });
+  }
+
+  function applyExpression(expr) {
+    setDropdownsFromExpr(expr);
+    $manual.value = expr;
+    updateOutput();
+  }
+
+  function updateOutput() {
+    const expr = buildExpression();
+    $output.textContent = expr;
+    $manual.value = expr;
+
+    // Validate
+    const v = validate(expr);
+    if (!v.valid) {
+      $errorBox.textContent = v.error;
+      $errorBox.classList.add('visible');
+      $descBox.style.display = 'none';
+      $runList.innerHTML = '<li class="empty-state" style="color:#f87171">Fix the error to see run times.</li>';
+      return;
+    }
+    $errorBox.classList.remove('visible');
+    $descBox.style.display = 'block';
+
+    // Description
+    $descBox.textContent = describe(expr);
+
+    // Next runs
+    const runs = computeNextRuns(expr, 10);
+    if (runs.length === 0) {
+      $runList.innerHTML = '<li class="empty-state">No matching run times found in the next 4 years.</li>';
+    } else {
+      $runList.innerHTML = '';
+      runs.forEach(d => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="run-date">${formatUTC(d)}</span><span class="run-relative">${relativeTime(d)}</span>`;
+        $runList.appendChild(li);
+      });
+    }
+  }
+
+  // ── Events ──
+  $toggle.addEventListener('change', () => {
+    isSixField = $toggle.checked;
+    renderPresets();
+    renderFields();
+    updateOutput();
+  });
+
+  $copyBtn.addEventListener('click', () => {
+    const text = $output.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      $copyBtn.classList.add('copied');
+      $copyBtn.textContent = '✓ Copied';
+      setTimeout(() => {
+        $copyBtn.classList.remove('copied');
+        $copyBtn.textContent = '📋 Copy';
+      }, 1500);
+    }).catch(() => {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      $copyBtn.textContent = '✓ Copied';
+      setTimeout(() => { $copyBtn.textContent = '📋 Copy'; }, 1500);
+    });
+  });
+
+  $resetBtn.addEventListener('click', () => {
+    renderFields();
+    updateOutput();
+  });
+
+  $exportBtn.addEventListener('click', () => {
+    const expr = $output.textContent;
+    const desc = $descBox.textContent;
+    const runs = computeNextRuns(expr, 10);
+    let text = `Cron Expression: ${expr}\nDescription: ${desc}\n\nNext 10 Run Times (UTC):\n`;
+    runs.forEach((d, i) => { text += `${i+1}. ${formatUTC(d)}\n`; });
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'cron-expression.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  $applyManual.addEventListener('click', () => {
+    const val = $manual.value.trim();
+    if (!val) return;
+    // Auto-detect mode
+    const parts = val.split(/\s+/);
+    if (parts.length === 6 && !isSixField) {
+      $toggle.checked = true;
+      isSixField = true;
+      renderPresets();
+      renderFields();
+    } else if (parts.length === 5 && isSixField) {
+      $toggle.checked = false;
+      isSixField = false;
+      renderPresets();
+      renderFields();
+    }
+    const expected = isSixField ? 6 : 5;
+    if (parts.length !== expected) {
+      $errorBox.textContent = `Expected ${expected} fields, got ${parts.length}.`;
+      $errorBox.classList.add('visible');
+      return;
+    }
+    applyExpression(val);
+  });
+
+  $manual.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') $applyManual.click();
+  });
+
+  // ── Init ──
+  renderPresets();
+  renderFields();
+  updateOutput();
+})();
+</script>
+</body>
+</html>

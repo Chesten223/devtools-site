@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regex Tester & Debugger</title>
+<meta name="description" content="Test and debug regular expressions with live matching, capture groups, and common patterns.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;min-height:100vh}
+a{color:#22c55e;text-decoration:none}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+h1{font-size:1.75rem;font-weight:700;color:#22c55e;margin-bottom:4px}
+.subtitle{color:#9ca3af;font-size:.9rem;margin-bottom:20px}
+.card{background:#111827;border:1px solid #1f2937;border-radius:8px;padding:16px;margin-bottom:16px}
+.card-title{font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:10px}
+label{display:block;font-size:.85rem;color:#9ca3af;margin-bottom:4px}
+input[type="text"],textarea{width:100%;background:#0a0a0a;border:1px solid #1f2937;border-radius:6px;padding:10px 12px;color:#e5e7eb;font-family:'SF Mono',Consolas,'Liberation Mono',Menlo,monospace;font-size:.9rem;outline:none;transition:border-color .2s}
+input[type="text"]:focus,textarea:focus{border-color:#22c55e}
+textarea{resize:vertical;min-height:120px}
+.regex-row{display:flex;gap:8px;align-items:flex-start}
+.regex-row input{flex:1}
+.flags{display:flex;gap:6px;margin-top:4px;flex-shrink:0}
+.flags label{display:flex;align-items:center;gap:4px;font-size:.8rem;color:#9ca3af;cursor:pointer;margin:0;padding:6px 10px;background:#0a0a0a;border:1px solid #1f2937;border-radius:4px;transition:all .2s}
+.flags label:hover{border-color:#22c55e}
+.flags input[type="checkbox"]{display:none}
+.flags label.active{background:#22c55e;color:#0a0a0a;border-color:#22c55e;font-weight:600}
+.error-msg{color:#ef4444;font-size:.8rem;margin-top:6px;display:none}
+.error-msg.show{display:block}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:768px){.two-col{grid-template-columns:1fr}}
+.highlight-box{background:#0a0a0a;border:1px solid #1f2937;border-radius:6px;padding:12px;font-family:'SF Mono',Consolas,'Liberation Mono',Menlo,monospace;font-size:.9rem;white-space:pre-wrap;word-break:break-all;min-height:80px;line-height:1.8}
+.hl-0{background:rgba(34,197,94,.25);border-bottom:2px solid #22c55e}
+.hl-1{background:rgba(59,130,246,.25);border-bottom:2px solid #3b82f6}
+.hl-2{background:rgba(249,115,22,.25);border-bottom:2px solid #f97316}
+.hl-3{background:rgba(168,85,247,.25);border-bottom:2px solid #a855f7}
+.hl-4{background:rgba(236,72,153,.25);border-bottom:2px solid #ec4899}
+.hl-5{background:rgba(234,179,8,.25);border-bottom:2px solid #eab308}
+.hl-6{background:rgba(6,182,212,.25);border-bottom:2px solid #06b6d4}
+.hl-7{background:rgba(244,63,94,.25);border-bottom:2px solid #f43f5e}
+.replace-row{display:flex;gap:8px;margin-bottom:8px}
+.replace-row input{flex:1}
+.replace-result{background:#0a0a0a;border:1px solid #1f2937;border-radius:6px;padding:12px;font-family:'SF Mono',Consolas,'Liberation Mono',Menlo,monospace;font-size:.9rem;white-space:pre-wrap;word-break:break-all;min-height:60px}
+.match-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.match-table th{text-align:left;color:#9ca3af;font-weight:600;border-bottom:1px solid #1f2937;padding:8px 6px;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
+.match-table td{padding:6px;border-bottom:1px solid #111827;vertical-align:top}
+.match-table tr:hover td{background:rgba(34,197,94,.05)}
+.match-val{color:#22c55e;font-family:'SF Mono',Consolas,'Liberation Mono',Menlo,monospace}
+.group-chip{display:inline-block;padding:1px 6px;border-radius:3px;font-size:.75rem;margin:1px 2px;font-family:'SF Mono',Consolas,'Liberation Mono',Menlo,monospace}
+.group-chip-0{background:rgba(59,130,246,.2);color:#60a5fa}
+.group-chip-1{background:rgba(249,115,22,.2);color:#fb923c}
+.group-chip-2{background:rgba(168,85,247,.2);color:#c084fc}
+.group-chip-3{background:rgba(236,72,153,.2);color:#f472b6}
+.group-chip-4{background:rgba(234,179,8,.2);color:#facc15}
+.group-chip-5{background:rgba(6,182,212,.2);color:#22d3ee}
+.group-chip-6{background:rgba(244,63,94,.2);color:#fb7185}
+.empty-state{color:#6b7280;font-size:.85rem;text-align:center;padding:20px}
+.patterns-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.pattern-btn{background:#0a0a0a;border:1px solid #1f2937;border-radius:6px;padding:8px 12px;color:#e5e7eb;font-size:.8rem;cursor:pointer;text-align:left;transition:all .2s;font-family:inherit}
+.pattern-btn:hover{border-color:#22c55e;background:#111827}
+.pattern-btn .pat-name{font-weight:600;display:block;margin-bottom:2px}
+.pattern-btn .pat-regex{font-family:'SF Mono',Consolas,'Liberation Mono',Menlo,monospace;font-size:.7rem;color:#6b7280;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn{background:#22c55e;color:#0a0a0a;border:none;border-radius:6px;padding:8px 16px;font-size:.85rem;font-weight:600;cursor:pointer;transition:opacity .2s;font-family:inherit}
+.btn:hover{opacity:.85}
+.btn-outline{background:transparent;border:1px solid #1f2937;color:#e5e7eb}
+.btn-outline:hover{border-color:#22c55e;color:#22c55e}
+.btn-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.stats{display:flex;gap:16px;font-size:.8rem;color:#9ca3af;margin-top:8px}
+.stats span strong{color:#22c55e}
+.mode-tabs{display:flex;gap:0;margin-bottom:12px}
+.mode-tab{padding:8px 16px;background:transparent;border:1px solid #1f2937;color:#9ca3af;cursor:pointer;font-size:.85rem;font-family:inherit;transition:all .2s}
+.mode-tab:first-child{border-radius:6px 0 0 6px}
+.mode-tab:last-child{border-radius:0 6px 6px 0}
+.mode-tab.active{background:#22c55e;color:#0a0a0a;border-color:#22c55e;font-weight:600}
+.replace-panel{display:none}
+.replace-panel.show{display:block}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Regex Tester & Debugger</h1>
+<p class="subtitle">Test and debug regular expressions with live matching, capture groups, and common patterns.</p>
+
+<!-- Pattern Input -->
+<div class="card">
+<div class="card-title">Regular Expression</div>
+<div class="regex-row">
+<input type="text" id="regexInput" placeholder="Enter regex pattern, e.g. (\d+)" spellcheck="false">
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;flex-wrap:wrap;gap:8px">
+<div class="flags">
+<label id="flagG"><input type="checkbox" checked data-flag="g">g</label>
+<label id="flagI"><input type="checkbox" data-flag="i">i</label>
+<label id="flagM"><input type="checkbox" data-flag="m">m</label>
+<label id="flagS"><input type="checkbox" data-flag="s">s</label>
+<label id="flagU"><input type="checkbox" data-flag="u">u</label>
+</div>
+<div class="stats">
+<span>Matches: <strong id="matchCount">0</strong></span>
+<span>Groups: <strong id="groupCount">0</strong></span>
+</div>
+</div>
+<div class="error-msg" id="regexError"></div>
+</div>
+
+<!-- Mode Tabs -->
+<div class="mode-tabs">
+<button class="mode-tab active" data-mode="test" id="tabTest">Test</button>
+<button class="mode-tab" data-mode="replace" id="tabReplace">Replace</button>
+</div>
+
+<!-- Test String -->
+<div class="card">
+<div class="card-title">Test String</div>
+<textarea id="testString" placeholder="Enter test string here..." spellcheck="false"></textarea>
+</div>
+
+<!-- Replace Panel -->
+<div class="card replace-panel" id="replacePanel">
+<div class="card-title">Replace</div>
+<div class="replace-row">
+<input type="text" id="replaceInput" placeholder="Replacement string (use $1, $2 for groups)" spellcheck="false">
+</div>
+<label style="margin-top:8px">Result</label>
+<div class="replace-result" id="replaceResult"></div>
+</div>
+
+<!-- Highlighted Matches -->
+<div class="card">
+<div class="card-title">Match Preview</div>
+<div class="highlight-box" id="highlightBox"><span class="empty-state">Enter a regex and test string to see matches</span></div>
+</div>
+
+<!-- Match Results -->
+<div class="card">
+<div class="card-title">Match Details</div>
+<div id="matchResults"><div class="empty-state">No matches yet</div></div>
+</div>
+
+<!-- Common Patterns -->
+<div class="card">
+<div class="card-title">Common Patterns</div>
+<div class="patterns-grid" id="patternsGrid"></div>
+</div>
+
+<!-- Buttons -->
+<div class="btn-row">
+<button class="btn" id="copyJson">Copy Matches (JSON)</button>
+<button class="btn btn-outline" id="exportCsv">Export Matches (CSV)</button>
+</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const regexInput = $('regexInput');
+const testString = $('testString');
+const replaceInput = $('replaceInput');
+const highlightBox = $('highlightBox');
+const matchResults = $('matchResults');
+const replaceResult = $('replaceResult');
+const replacePanel = $('replacePanel');
+const regexError = $('regexError');
+const matchCountEl = $('matchCount');
+const groupCountEl = $('groupCount');
+
+const GROUP_COLORS = 8;
+let currentMatches = [];
+
+const PATTERNS = [
+  { name: 'Email', regex: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}', flags: 'gi', test: 'Contact us at hello@example.com or support@domain.org' },
+  { name: 'URL', regex: 'https?:\\/\\/[\\w\\-.]+(:\\d+)?(\\/[\\w\\-./?%&=@#]*)?', flags: 'gi', test: 'Visit https://example.com/page or http://localhost:3000/api?q=1' },
+  { name: 'Phone', regex: '(?:\\+?\\d{1,3}[-.\\s]?)?\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}', flags: 'g', test: 'Call +1 (555) 123-4567 or 555.987.6543' },
+  { name: 'IPv4', regex: '\\b(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\b', flags: 'g', test: 'Server IPs: 192.168.1.1, 10.0.0.255, 172.16.0.1' },
+  { name: 'Date', regex: '\\b(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])\\b', flags: 'g', test: 'Dates: 2024-01-15, 2023-12-31, 2024-06-01' },
+  { name: 'Hex Color', regex: '#([0-9a-fA-F]{3}){1,2}\\b', flags: 'gi', test: 'Colors: #ff0000, #00f, #AABBCC, #xyz' },
+  { name: 'Credit Card', regex: '\\b(?:\\d[ -]*?){13,19}\\b', flags: 'g', test: '4111 1111 1111 1111 or 5500-0000-0000-0004' },
+];
+
+// Build patterns grid
+const grid = $('patternsGrid');
+PATTERNS.forEach((p, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'pattern-btn';
+  btn.innerHTML = `<span class="pat-name">${p.name}</span><span class="pat-regex">${p.regex}</span>`;
+  btn.addEventListener('click', () => {
+    regexInput.value = p.regex;
+    testString.value = p.test;
+    // Set flags
+    document.querySelectorAll('.flags input').forEach(cb => cb.checked = p.flags.includes(cb.dataset.flag));
+    updateFlags();
+    runMatch();
+  });
+  grid.appendChild(btn);
+});
+
+// Flag toggles
+document.querySelectorAll('.flags label').forEach(label => {
+  const cb = label.querySelector('input');
+  label.classList.toggle('active', cb.checked);
+  cb.addEventListener('change', () => {
+    label.classList.toggle('active', cb.checked);
+    runMatch();
+  });
+});
+
+function updateFlags() {
+  document.querySelectorAll('.flags label').forEach(label => {
+    const cb = label.querySelector('input');
+    label.classList.toggle('active', cb.checked);
+  });
+}
+
+function getFlags() {
+  return Array.from(document.querySelectorAll('.flags input')).filter(c => c.checked).map(c => c.dataset.flag).join('');
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function runMatch() {
+  const pattern = regexInput.value;
+  const text = testString.value;
+  const flags = getFlags();
+  const isReplace = $('tabReplace').classList.contains('active');
+
+  regexError.classList.remove('show');
+  regexError.textContent = '';
+
+  if (!pattern || !text) {
+    highlightBox.innerHTML = '<span class="empty-state">Enter a regex and test string to see matches</span>';
+    matchResults.innerHTML = '<div class="empty-state">No matches yet</div>';
+    replaceResult.textContent = '';
+    matchCountEl.textContent = '0';
+    groupCountEl.textContent = '0';
+    currentMatches = [];
+    return;
+  }
+
+  let re;
+  try {
+    re = new RegExp(pattern, flags);
+  } catch (e) {
+    regexError.textContent = e.message;
+    regexError.classList.add('show');
+    highlightBox.innerHTML = '<span class="empty-state" style="color:#ef4444">Invalid regex</span>';
+    matchResults.innerHTML = '<div class="empty-state" style="color:#ef4444">Fix regex errors to see matches</div>';
+    replaceResult.textContent = '';
+    matchCountEl.textContent = '0';
+    groupCountEl.textContent = '0';
+    currentMatches = [];
+    return;
+  }
+
+  // Collect matches
+  currentMatches = [];
+  const hasG = flags.includes('g');
+  if (hasG) {
+    let m;
+    // Prevent infinite loops with zero-length matches
+    let lastIdx = -1;
+    while ((m = re.exec(text)) !== null) {
+      if (m.index === lastIdx) { re.lastIndex++; continue; }
+      lastIdx = m.index;
+      currentMatches.push({ value: m[0], index: m.index, groups: Array.from(m).slice(1), namedGroups: m.groups || {} });
+      if (m[0].length === 0) re.lastIndex++;
+    }
+  } else {
+    const m = re.exec(text);
+    if (m) currentMatches.push({ value: m[0], index: m.index, groups: Array.from(m).slice(1), namedGroups: m.groups || {} });
+  }
+
+  matchCountEl.textContent = currentMatches.length;
+  const maxGroups = currentMatches.reduce((a, m) => Math.max(a, m.groups.length), 0);
+  groupCountEl.textContent = maxGroups;
+
+  // Highlight
+  buildHighlight(text);
+
+  // Match details table
+  buildMatchTable();
+
+  // Replace
+  if (isReplace) doReplace(re, text, flags);
+}
+
+function buildHighlight(text) {
+  if (!currentMatches.length) {
+    highlightBox.innerHTML = escapeHtml(text) || '<span class="empty-state">No matches found</span>';
+    return;
+  }
+
+  // Build segments: sort matches by index, handle overlaps by priority (first wins)
+  const sorted = [...currentMatches].sort((a, b) => a.index - b.index);
+  let html = '';
+  let pos = 0;
+
+  for (const m of sorted) {
+    const start = m.index;
+    const end = start + m.value.length;
+    if (start > pos) html += escapeHtml(text.slice(pos, start));
+
+    // Full match highlighted
+    const matchText = text.slice(start, end);
+    // If there are groups, try to sub-highlight groups within the match
+    if (m.groups.length > 0) {
+      html += highlightGroupsWithin(text, m, start);
+    } else {
+      html += `<span class="hl-0">${escapeHtml(matchText)}</span>`;
+    }
+    pos = end;
+  }
+  if (pos < text.length) html += escapeHtml(text.slice(pos));
+  highlightBox.innerHTML = html;
+}
+
+function highlightGroupsWithin(text, match, matchStart) {
+  // First wrap full match, then overlay groups
+  const matchEnd = matchStart + match.value.length;
+  const segs = [];
+  let pos = matchStart;
+
+  // Sort groups by their position
+  const groupInfos = [];
+  for (let i = 0; i < match.groups.length; i++) {
+    const gv = match.groups[i];
+    if (gv === undefined) continue;
+    // Find position of this group within the full match
+    const idx = text.indexOf(gv, pos);
+    if (idx >= matchStart && idx + gv.length <= matchEnd) {
+      groupInfos.push({ start: idx, end: idx + gv.length, idx: i });
+      pos = idx + gv.length;
+    }
+  }
+
+  // Build within full match span
+  let html = `<span class="hl-0">`;
+  pos = matchStart;
+  for (const gi of groupInfos) {
+    if (gi.start > pos) html += escapeHtml(text.slice(pos, gi.start));
+    html += `</span><span class="hl-${(gi.idx % (GROUP_COLORS - 1)) + 1}">${escapeHtml(text.slice(gi.start, gi.end))}</span><span class="hl-0">`;
+    pos = gi.end;
+  }
+  if (pos < matchEnd) html += escapeHtml(text.slice(pos, matchEnd));
+  html += '</span>';
+  return html;
+}
+
+function buildMatchTable() {
+  if (!currentMatches.length) {
+    matchResults.innerHTML = '<div class="empty-state">No matches found</div>';
+    return;
+  }
+
+  let html = '<table class="match-table"><thead><tr><th>#</th><th>Index</th><th>Match</th><th>Groups</th></tr></thead><tbody>';
+  currentMatches.forEach((m, i) => {
+    html += `<tr><td>${i}</td><td>${m.index}</td><td class="match-val">${escapeHtml(m.value)}</td><td>`;
+    if (m.groups.length) {
+      m.groups.forEach((g, gi) => {
+        if (g !== undefined) html += `<span class="group-chip group-chip-${gi % 7}">\$${gi + 1}: ${escapeHtml(g)}</span> `;
+      });
+    }
+    const named = Object.entries(m.namedGroups || {});
+    named.forEach(([k, v]) => { html += `<span class="group-chip group-chip-0">${k}: ${escapeHtml(v)}</span> `; });
+    if (!m.groups.length && !named.length) html += '—';
+    html += '</td></tr>';
+  });
+  html += '</tbody></table>';
+  matchResults.innerHTML = html;
+}
+
+function doReplace() {
+  const pattern = regexInput.value;
+  const text = testString.value;
+  const flags = getFlags();
+  const replacement = replaceInput.value;
+
+  if (!pattern || !text) { replaceResult.textContent = ''; return; }
+
+  let re;
+  try { re = new RegExp(pattern, flags); } catch { replaceResult.textContent = ''; return; }
+
+  try {
+    const result = text.replace(re, replacement);
+    replaceResult.textContent = result;
+  } catch (e) {
+    replaceResult.textContent = 'Error: ' + e.message;
+  }
+}
+
+// Mode tabs
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const isReplace = tab.dataset.mode === 'replace';
+    replacePanel.classList.toggle('show', isReplace);
+    if (isReplace) doReplace();
+  });
+});
+
+// Live update
+regexInput.addEventListener('input', runMatch);
+testString.addEventListener('input', runMatch);
+replaceInput.addEventListener('input', runMatch);
+
+// Copy JSON
+$('copyJson').addEventListener('click', () => {
+  if (!currentMatches.length) return;
+  const data = currentMatches.map((m, i) => ({
+    index: i,
+    match: m.value,
+    position: m.index,
+    length: m.value.length,
+    groups: m.groups.reduce((o, g, gi) => { if (g !== undefined) o[`$${gi + 1}`] = g; return o; }, {}),
+    ...(Object.keys(m.namedGroups || {}).length ? { namedGroups: m.namedGroups } : {})
+  }));
+  navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+    const btn = $('copyJson');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+});
+
+// Export CSV
+$('exportCsv').addEventListener('click', () => {
+  if (!currentMatches.length) return;
+  const maxG = currentMatches.reduce((a, m) => Math.max(a, m.groups.length), 0);
+  let csv = 'Index,Position,Match,Length';
+  for (let i = 1; i <= maxG; i++) csv += `,$${i}`;
+  csv += '\n';
+  currentMatches.forEach((m, i) => {
+    const row = [i, m.index, `"${m.value.replace(/"/g, '""')}"`, m.value.length];
+    for (let g = 0; g < maxG; g++) {
+      row.push(m.groups[g] !== undefined ? `"${m.groups[g].replace(/"/g, '""')}"` : '');
+    }
+    csv += row.join(',') + '\n';
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'regex-matches.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// Init
+runMatch();
+</script>
+</body>
+</html>

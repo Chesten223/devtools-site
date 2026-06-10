@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON Path Finder</title>
+<meta name="description" content="Find JSON paths by clicking nodes. Supports dot, bracket, and JSONPath notation.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;min-height:100vh}
+.container{max-width:1200px;margin:0 auto;padding:1rem}
+h1{font-size:1.75rem;font-weight:700;color:#f9fafb;margin-bottom:.25rem}
+.subtitle{color:#9ca3af;font-size:.9rem;margin-bottom:1.25rem}
+.card{background:#111827;border:1px solid #1f2937;border-radius:.75rem;padding:1.25rem;margin-bottom:1rem}
+.card-title{font-size:.85rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem}
+textarea{width:100%;min-height:180px;background:#0a0a0a;border:1px solid #1f2937;border-radius:.5rem;color:#e5e7eb;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:.85rem;padding:.75rem;resize:vertical;outline:none;transition:border-color .2s}
+textarea:focus{border-color:#22c55e}
+textarea.invalid{border-color:#ef4444}
+.toolbar{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem}
+button{background:#1f2937;color:#e5e7eb;border:1px solid #374151;border-radius:.5rem;padding:.45rem .85rem;font-size:.82rem;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:.35rem}
+button:hover{background:#374151;border-color:#4b5563}
+button:active{transform:scale(.97)}
+.btn-accent{background:#22c55e;color:#0a0a0a;border-color:#22c55e;font-weight:600}
+.btn-accent:hover{background:#16a34a;border-color:#16a34a}
+.validation-msg{font-size:.8rem;margin-top:.5rem;min-height:1.2rem}
+.validation-msg.error{color:#ef4444}
+.validation-msg.ok{color:#22c55e}
+.search-box{width:100%;background:#0a0a0a;border:1px solid #1f2937;border-radius:.5rem;color:#e5e7eb;font-size:.85rem;padding:.5rem .75rem;outline:none;transition:border-color .2s}
+.search-box:focus{border-color:#22c55e}
+.tree-wrap{max-height:520px;overflow:auto;margin-top:.5rem;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:.82rem}
+.tree-wrap::-webkit-scrollbar{width:6px;height:6px}
+.tree-wrap::-webkit-scrollbar-track{background:#0a0a0a}
+.tree-wrap::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+.tree-node{padding:1px 0 1px 0;cursor:pointer;border-radius:3px}
+.tree-node:hover{background:rgba(34,197,94,.08)}
+.tree-node.selected{background:rgba(34,197,94,.15);outline:1px solid rgba(34,197,94,.3)}
+.tree-node .toggle{display:inline-block;width:1em;text-align:center;color:#6b7280;user-select:none;font-size:.75rem}
+.tree-children{padding-left:1.25rem;border-left:1px solid #1f2937;margin-left:.45rem}
+.tree-children.collapsed{display:none}
+.t-key{color:#22c55e}.t-colon{color:#6b7280}.t-str{color:#fbbf24}.t-num{color:#60a5fa}.t-bool{color:#f472b6}.t-null{color:#9ca3af;font-style:italic}.t-bracket{color:#6b7280}.t-comma{color:#6b7280}.t-ellipsis{color:#6b7280;font-style:italic;cursor:pointer}
+.node-info{margin-top:.5rem;font-size:.78rem;color:#9ca3af;display:flex;gap:1rem;flex-wrap:wrap}
+.node-info span{background:#0a0a0a;padding:.15rem .5rem;border-radius:.25rem;border:1px solid #1f2937}
+.path-results{display:none;margin-top:.75rem}
+.path-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;background:#0a0a0a;border:1px solid #1f2937;border-radius:.5rem;padding:.5rem .75rem}
+.path-label{font-size:.72rem;font-weight:600;color:#9ca3af;text-transform:uppercase;min-width:80px;letter-spacing:.04em}
+.path-value{flex:1;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:.82rem;color:#e5e7eb;word-break:break-all}
+.path-copy{background:none;border:1px solid #374151;padding:.3rem .5rem;font-size:.72rem;color:#9ca3af;border-radius:.35rem}
+.path-copy:hover{border-color:#22c55e;color:#22c55e}
+.export-menu{display:none;position:absolute;right:0;top:100%;background:#111827;border:1px solid #374151;border-radius:.5rem;overflow:hidden;z-index:10;min-width:160px}
+.export-menu.show{display:block}
+.export-menu button{display:block;width:100%;border:none;border-radius:0;padding:.5rem .75rem;text-align:left}
+.export-menu button:hover{background:#1f2937}
+.empty-state{color:#6b7280;text-align:center;padding:2rem;font-size:.9rem}
+mark{background:rgba(251,191,36,.3);color:#fbbf24;border-radius:2px;padding:0 1px}
+@media(max-width:768px){
+.grid{grid-template-columns:1fr!important}
+.container{padding:.75rem}
+h1{font-size:1.35rem}
+.path-row{flex-wrap:wrap}
+.path-label{min-width:auto}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>JSON Path Finder</h1>
+<p class="subtitle">Paste JSON, click any node to get its path in multiple formats.</p>
+
+<div class="card">
+<div class="card-title">Input</div>
+<textarea id="jsonInput" spellcheck="false" placeholder='Paste JSON here, e.g. {"name":"Alice","items":[{"id":1}]}'></textarea>
+<div id="validationMsg" class="validation-msg"></div>
+<div class="toolbar">
+<button class="btn-accent" onclick="parseJSON()">Parse</button>
+<button onclick="formatJSON()">Format</button>
+<button onclick="minifyJSON()">Minify</button>
+<button onclick="loadSample()">Sample</button>
+<button onclick="clearAll()">Clear</button>
+</div>
+</div>
+
+<div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+<div class="card">
+<div class="card-title">Tree View</div>
+<input type="text" class="search-box" id="searchInput" placeholder="Search keys or values…" oninput="handleSearch()">
+<div class="tree-wrap" id="treeView">
+<div class="empty-state">Paste JSON and click Parse</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Selected Node</div>
+<div id="nodeDetail">
+<div class="empty-state" id="nodePlaceholder">Click a node in the tree to see its path</div>
+<div id="nodeInfo" class="node-info" style="display:none"></div>
+<div id="pathResults" class="path-results"></div>
+</div>
+</div>
+</div>
+
+<div class="card" style="margin-top:0">
+<div class="toolbar" style="justify-content:flex-end;position:relative">
+<span style="font-size:.8rem;color:#6b7280;flex:1" id="statsLine"></span>
+<button onclick="expandAll()">Expand All</button>
+<button onclick="collapseAll()">Collapse All</button>
+<div style="position:relative">
+<button onclick="toggleExport()">Export ▾</button>
+<div class="export-menu" id="exportMenu">
+<button onclick="exportPaths('dot')">Dot notation paths</button>
+<button onclick="exportPaths('bracket')">Bracket notation paths</button>
+<button onclick="exportPaths('jsonpath')">JSONPath notation paths</button>
+<button onclick="exportTree()">Tree as text</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+let parsed=null,allPaths=[],selectedEl=null,nodeCount=0,maxDepth=0;
+const $=id=>document.getElementById(id);
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function isSimple(v){return v===null||typeof v!=='object'}
+
+function parseJSON(){
+const raw=$('jsonInput').value.trim(),msg=$('validationMsg'),ta=$('jsonInput');
+if(!raw){msg.textContent='';msg.className='validation-msg';ta.classList.remove('invalid');return}
+try{parsed=JSON.parse(raw);ta.classList.remove('invalid');msg.textContent='✓ Valid JSON';msg.className='validation-msg ok';buildTree()}
+catch(e){ta.classList.add('invalid');msg.textContent='✗ '+e.message;msg.className='validation-msg error'}
+}
+function formatJSON(){const ta=$('jsonInput');try{ta.value=JSON.stringify(JSON.parse(ta.value),null,2);parseJSON()}catch(e){}}
+function minifyJSON(){const ta=$('jsonInput');try{ta.value=JSON.stringify(JSON.parse(ta.value));parseJSON()}catch(e){}}
+function loadSample(){
+$('jsonInput').value=JSON.stringify({store:{book:[{title:"Sayings of the Century",author:"Nigel Rees",price:8.95,inStock:true},{title:"Sword of Honour",author:"Evelyn Waugh",price:12.99,inStock:false},{title:"Moby Dick",author:"Herman Melville",isbn:"0-553-21311-3",price:8.99,inStock:true}],bicycle:{color:"red",price:19.95,features:["basket","bell","lights"]}},metadata:{version:"1.0",generated:"2024-01-15"}},null,2);
+parseJSON()
+}
+function clearAll(){$('jsonInput').value='';$('jsonInput').classList.remove('invalid');$('validationMsg').textContent='';$('validationMsg').className='validation-msg';$('treeView').innerHTML='<div class="empty-state">Paste JSON and click Parse</div>';$('nodePlaceholder').style.display='';$('nodeInfo').style.display='none';$('pathResults').style.display='none';$('statsLine').textContent='';parsed=null;allPaths=[];selectedEl=null}
+
+function buildTree(){
+const container=$('treeView');container.innerHTML='';
+if(parsed===undefined||parsed===null){container.innerHTML='<div class="empty-state">No data</div>';return}
+nodeCount=0;maxDepth=0;allPaths=[];
+renderNode(parsed,container,'',0,'$');
+$('statsLine').textContent=`${nodeCount} nodes · max depth ${maxDepth}`
+}
+
+function renderNode(value,parent,path,depth,displayKey){
+nodeCount++;if(depth>maxDepth)maxDepth=depth;
+const row=document.createElement('div');row.className='tree-node';
+const isObj=value!==null&&typeof value==='object';
+const isArr=Array.isArray(value);
+const pathEntry={dot:toDot(path),bracket:toBracket(path),jsonpath:toJSONPath(path),key:displayKey,type:isArr?'array':isObj?'object':value===null?'null':typeof value,depth,value:isSimple(value)?value:undefined};
+allPaths.push(pathEntry);row.dataset.pathIdx=allPaths.length-1;
+
+const toggle=document.createElement('span');toggle.className='toggle';
+if(isObj){toggle.textContent='▼';toggle.onclick=e=>{e.stopPropagation();toggleCollapsible(row)}}
+else toggle.textContent='·';
+row.appendChild(toggle);
+
+if(displayKey){const k=document.createElement('span');k.className='t-key';k.textContent=displayKey;row.appendChild(k);const c=document.createElement('span');c.className='t-colon';c.textContent=': ';row.appendChild(c)}
+
+if(isArr){
+const ob=document.createElement('span');ob.className='t-bracket';ob.textContent='[';row.appendChild(ob);
+const len=document.createElement('span');len.className='t-num';len.textContent=value.length+' items';row.appendChild(len);
+const cb=document.createElement('span');cb.className='t-bracket';cb.textContent=']';row.appendChild(cb)
+}else if(isObj){
+const ob=document.createElement('span');ob.className='t-bracket';ob.textContent='{';row.appendChild(ob);
+const keys=Object.keys(value);
+if(keys.length===0){const empty=document.createElement('span');empty.className='t-bracket';empty.textContent=' }';row.appendChild(empty)}
+else{const count=document.createElement('span');count.className='t-num';count.textContent=' '+keys.length+' keys ';row.appendChild(count);const cb=document.createElement('span');cb.className='t-bracket';cb.textContent='}';row.appendChild(cb)}
+}else{
+appendValue(row,value)
+}
+row.onclick=e=>{e.stopPropagation();selectNode(row)};
+parent.appendChild(row);
+
+if(isObj&&((isArr&&value.length>0)||(!isArr&&Object.keys(value).length>0))){
+const children=document.createElement('div');children.className='tree-children';
+if(isArr)value.forEach((v,i)=>renderNode(v,children,path+'['+i+']',depth+1,i));
+else Object.keys(value).forEach(k=>renderNode(value[k],children,addToPath(path,k),depth+1,'"'+k+'"'));
+parent.appendChild(children)
+}
+}
+
+function appendValue(el,v){
+if(v===null){const s=document.createElement('span');s.className='t-null';s.textContent='null';el.appendChild(s)}
+else if(typeof v==='string'){const s=document.createElement('span');s.className='t-str';s.textContent=JSON.stringify(v.length>80?v.slice(0,80)+'…':v);el.appendChild(s)}
+else if(typeof v==='number'){const s=document.createElement('span');s.className='t-num';s.textContent=String(v);el.appendChild(s)}
+else if(typeof v==='boolean'){const s=document.createElement('span');s.className='t-bool';s.textContent=String(v);el.appendChild(s)}
+}
+
+function addToPath(path,key){
+const safe=/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key);
+return path?path+(safe?'.'+key:'["'+key+'"]'):(safe?key:'["'+key+'"]')
+}
+function toDot(path){return path||'(root)'}
+function toBracket(path){
+if(!path)return '(root)';
+let out='',i=0;
+while(i<path.length){
+if(path[i]==='['){const j=path.indexOf(']',i);const inner=path.slice(i+1,j);out+=Number(inner)==inner?'['+inner+']':'["'+inner+'"]';i=j+1}
+else if(path[i]==='.'){i++}
+else{let j=i;while(j<path.length&&path[j]!=='.'&&path[j]!=='[')j++;out+=out?'["'+path.slice(i,j)+'"]':'["'+path.slice(i,j)+'"]';i=j}
+}
+return out
+}
+function toJSONPath(path){return path?'$.'+path:'$'}
+function toggleCollapsible(row){
+const ch=row.nextElementSibling;if(!ch||!ch.classList.contains('tree-children'))return;
+const t=row.querySelector('.toggle');
+if(ch.classList.contains('collapsed')){ch.classList.remove('collapsed');t.textContent='▼'}
+else{ch.classList.add('collapsed');t.textContent='▶'}
+}
+
+function selectNode(row){
+if(selectedEl)selectedEl.classList.remove('selected');
+row.classList.add('selected');selectedEl=row;
+const idx=parseInt(row.dataset.pathIdx);if(isNaN(idx))return;
+const p=allPaths[idx];
+$('nodePlaceholder').style.display='none';
+const info=$('nodeInfo');info.style.display='flex';
+info.innerHTML=`<span>Type: ${esc(p.type)}</span><span>Depth: ${p.depth}</span>`+(p.value!==undefined?`<span>Value: ${esc(String(p.value).length>40?p.value.slice(0,40)+'…':p.value)}</span>`:'');
+const pr=$('pathResults');pr.style.display='block';
+pr.innerHTML=[
+{label:'Dot',val:p.dot},
+{label:'Bracket',val:p.bracket},
+{label:'JSONPath',val:p.jsonpath}
+].map(f=>`<div class="path-row"><span class="path-label">${f.label}</span><span class="path-value">${esc(f.val)}</span><button class="path-copy" onclick="copyText('${escForAttr(f.val)}')">Copy</button></div>`).join('')
+}
+
+function escForAttr(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"')}
+function copyText(text){
+navigator.clipboard.writeText(text).then(()=>{
+document.querySelectorAll('.path-copy').forEach(b=>{if(b.textContent==='✓ Copied'){b.textContent='Copy';b.style.color='';b.style.borderColor=''}});
+const btn=document.activeElement;if(btn&&btn.classList.contains('path-copy')){btn.textContent='✓ Copied';btn.style.color='#22c55e';btn.style.borderColor='#22c55e';setTimeout(()=>{btn.textContent='Copy';btn.style.color='';btn.style.borderColor=''},1500)}
+})
+}
+function expandAll(){$('.tree-children.collapsed').forEach||(document.querySelectorAll('.tree-children.collapsed').forEach(c=>{c.classList.remove('collapsed');const t=c.previousElementSibling;if(t){const tg=t.querySelector('.toggle');if(tg)tg.textContent='▼'}}))}
+function collapseAll(){document.querySelectorAll('.tree-children').forEach(c=>{if(!c.classList.contains('collapsed')){c.classList.add('collapsed');const t=c.previousElementSibling;if(t){const tg=t.querySelector('.toggle');if(tg)tg.textContent='▶'}}})}
+
+function handleSearch(){
+const q=$('searchInput').value.trim().toLowerCase();
+document.querySelectorAll('.tree-node').forEach(n=>{n.style.display=''});
+if(!q)return;
+document.querySelectorAll('.tree-node').forEach(n=>{
+const txt=n.textContent.toLowerCase();
+if(!txt.includes(q))n.style.display='none';
+});
+document.querySelectorAll('.tree-children').forEach(c=>{if(c.querySelector('.tree-node:not([style*="display: none"])')){c.classList.remove('collapsed');c.previousElementSibling&&(c.previousElementSibling.querySelector('.toggle')||{}).textContent='▼'}})
+}
+
+function toggleExport(){$('exportMenu').classList.toggle('show')}
+document.addEventListener('click',e=>{if(!e.target.closest('[onclick*="toggleExport"]')&&!e.target.closest('.export-menu'))$('exportMenu').classList.remove('show')});
+
+function exportPaths(fmt){
+$('exportMenu').classList.remove('show');
+const lines=allPaths.map(p=>{if(fmt==='dot')return p.dot+': '+p.type;if(fmt==='bracket')return p.bracket+': '+p.type;return p.jsonpath+': '+p.type}).join('\n');
+download('json-paths-'+fmt+'.txt',lines)
+}
+function exportTree(){
+$('exportMenu').classList.remove('show');
+download('json-tree.json',JSON.stringify(parsed,null,2))
+}
+function download(name,content){
+const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:'text/plain'}));a.download=name;a.click();URL.revokeObjectURL(a.href)
+}
+$('jsonInput').addEventListener('input',()=>{const ta=$('jsonInput');if(ta.value.trim()){try{JSON.parse(ta.value);ta.classList.remove('invalid');$('validationMsg').textContent='✓ Valid JSON';$('validationMsg').className='validation-msg ok'}catch{ta.classList.add('invalid');$('validationMsg').textContent='✗ Invalid JSON';$('validationMsg').className='validation-msg error'}}else{ta.classList.remove('invalid');$('validationMsg').textContent='';$('validationMsg').className='validation-msg'}});
+</script>
+</body>
+</html>

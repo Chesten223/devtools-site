@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Social Image Generator</title>
+<meta name="description" content="Generate social media images from text with gradient backgrounds.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--card:#111827;--accent:#22c55e;--accent-hover:#16a34a;--text:#e5e7eb;--muted:#6b7280;--border:#1f2937;--radius:10px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+h1{font-size:1.5rem;font-weight:700;margin-bottom:.25rem}
+.subtitle{color:var(--muted);font-size:.875rem;margin-bottom:1.5rem}
+.container{max-width:1100px;margin:0 auto;padding:1.5rem}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:1.5rem;align-items:start}
+@media(max-width:800px){.layout{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem}
+textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.75rem;font-size:.95rem;resize:vertical;min-height:100px;font-family:inherit}
+textarea:focus{outline:none;border-color:var(--accent)}
+.section{margin-bottom:1.1rem}
+.section:last-child{margin-bottom:0}
+select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.55rem .75rem;font-size:.9rem;cursor:pointer}
+select:focus{outline:none;border-color:var(--accent)}
+.gradient-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem}
+.gradient-btn{height:40px;border-radius:8px;border:2px solid transparent;cursor:pointer;transition:border-color .15s,transform .1s}
+.gradient-btn:hover{transform:scale(1.05)}
+.gradient-btn.active{border-color:#fff}
+.swatches{display:flex;gap:.5rem;flex-wrap:wrap}
+.swatch{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:border-color .15s}
+.swatch.active{border-color:#fff}
+.size-toggles{display:flex;gap:.5rem}
+.size-btn{flex:1;padding:.5rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;font-size:.8rem;font-weight:600;text-align:center;transition:border-color .15s}
+.size-btn.active{border-color:var(--accent);color:var(--accent)}
+.size-btn:hover{border-color:var(--accent)}
+.download-btn{width:100%;padding:.7rem;background:var(--accent);color:#000;border:none;border-radius:8px;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .15s}
+.download-btn:hover{background:var(--accent-hover)}
+.preview-wrap{position:relative;overflow:hidden;border-radius:var(--radius)}
+#preview-canvas{width:100%;height:auto;display:block;border-radius:var(--radius)}
+.font-sans{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+.font-serif{font-family:Georgia,'Times New Roman',serif}
+.font-mono{font-family:'Courier New',Courier,monospace}
+.font-hand{font-family:'Comic Sans MS','Brush Script MT',cursive}
+.font-display{font-family:Impact,'Arial Black',sans-serif}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Social Image Generator</h1>
+  <p class="subtitle">Generate social media images from text with gradient backgrounds.</p>
+  <div class="layout">
+    <div class="card" id="controls">
+      <div class="section">
+        <label for="text-input">Text / Title</label>
+        <textarea id="text-input" placeholder="Write something bold...&#10;Use #hashtags to highlight them.&#10;Line breaks are preserved."></textarea>
+      </div>
+      <div class="section">
+        <label>Canvas Size</label>
+        <div class="size-toggles">
+          <button class="size-btn active" data-w="1200" data-h="630">OG 1200×630</button>
+          <button class="size-btn" data-w="1080" data-h="1080">Instagram 1080×1080</button>
+        </div>
+      </div>
+      <div class="section">
+        <label>Background</label>
+        <div class="gradient-grid" id="gradient-grid"></div>
+      </div>
+      <div class="section">
+        <label>Text Color</label>
+        <div class="swatches" id="swatches"></div>
+      </div>
+      <div class="section">
+        <label for="font-select">Font</label>
+        <select id="font-select">
+          <option value="sans">Sans-serif</option>
+          <option value="serif">Serif</option>
+          <option value="mono">Monospace</option>
+          <option value="hand">Handwriting</option>
+          <option value="display">Display</option>
+        </select>
+      </div>
+      <div class="section">
+        <button class="download-btn" id="download-btn">⬇ Download PNG</button>
+      </div>
+    </div>
+    <div class="card preview-wrap">
+      <canvas id="preview-canvas" width="1200" height="630"></canvas>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+const GRADIENTS=[
+  {name:'sunset',stops:['#ff6b35','#f7931e','#ff0066']},
+  {name:'ocean',stops:['#0f3443','#34e89e','#0f3443']},
+  {name:'forest',stops:['#134e5e','#2c7873','#71b280']},
+  {name:'neon',stops:['#fc466b','#3f5efb','#00f260']},
+  {name:'dark',stops:['#0f0c29','#302b63','#24243e']}
+];
+const TEXT_COLORS=[
+  {name:'White',v:'#ffffff'},
+  {name:'Black',v:'#000000'},
+  {name:'Accent',v:'#22c55e'},
+  {name:'Yellow',v:'#facc15'},
+  {name:'Cyan',v:'#22d3ee'},
+  {name:'Pink',v:'#f472b6'},
+  {name:'Orange',v:'#fb923c'}
+];
+const FONT_MAP={
+  sans:'-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif',
+  serif:'Georgia,"Times New Roman",serif',
+  mono:'"Courier New",Courier,monospace',
+  hand:'"Comic Sans MS","Brush Script MT",cursive',
+  display:'Impact,"Arial Black",sans-serif'
+};
+const HASHTAG_COLOR='#22c55e';
+const canvas=document.getElementById('preview-canvas');
+const ctx=canvas.getContext('2d');
+const textInput=document.getElementById('text-input');
+const fontSelect=document.getElementById('font-select');
+const downloadBtn=document.getElementById('download-btn');
+const gradientGrid=document.getElementById('gradient-grid');
+const swatchesEl=document.getElementById('swatches');
+let currentGradient=0;
+let currentColor=0;
+let currentFont='sans';
+let canvasW=1200,canvasH=630;
+
+function buildUI(){
+  GRADIENTS.forEach((g,i)=>{
+    const btn=document.createElement('button');
+    btn.className='gradient-btn'+(i===0?' active':'');
+    btn.style.background=`linear-gradient(135deg,${g.stops.join(',')})`;
+    btn.title=g.name;
+    btn.addEventListener('click',()=>{
+      gradientGrid.querySelectorAll('.gradient-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentGradient=i;
+      render();
+    });
+    gradientGrid.appendChild(btn);
+  });
+  TEXT_COLORS.forEach((c,i)=>{
+    const s=document.createElement('button');
+    s.className='swatch'+(i===0?' active':'');
+    s.style.background=c.v;
+    s.title=c.name;
+    s.addEventListener('click',()=>{
+      swatchesEl.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));
+      s.classList.add('active');
+      currentColor=i;
+      render();
+    });
+    swatchesEl.appendChild(s);
+  });
+}
+
+function resizeCanvas(w,h){
+  canvasW=w;canvasH=h;
+  canvas.width=w;canvas.height=h;
+  render();
+}
+
+function drawBackground(){
+  const g=GRADIENTS[currentGradient];
+  const grad=ctx.createLinearGradient(0,0,canvasW,canvasH);
+  const step=1/(g.stops.length-1);
+  g.stops.forEach((c,i)=>grad.addColorStop(i*step,c));
+  ctx.fillStyle=grad;
+  ctx.fillRect(0,0,canvasW,canvasH);
+  // subtle noise overlay
+  ctx.save();
+  ctx.globalAlpha=0.04;
+  for(let i=0;i<8000;i++){
+    ctx.fillStyle=Math.random()>.5?'#fff':'#000';
+    ctx.fillRect(Math.random()*canvasW,Math.random()*canvasH,1,1);
+  }
+  ctx.restore();
+}
+
+function parseSegments(line){
+  const parts=[];
+  const re=/(#[A-Za-z0-9_]+)/g;
+  let last=0,m;
+  while((m=re.exec(line))!==null){
+    if(m.index>last)parts.push({text:line.slice(last,m.index),tag:false});
+    parts.push({text:m[1],tag:true});
+    last=re.lastIndex;
+  }
+  if(last<line.length)parts.push({text:line.slice(last),tag:false});
+  return parts;
+}
+
+function wrapText(lines,maxW,fontSize){
+  const result=[];
+  const lineH=fontSize*1.35;
+  for(const line of lines){
+    if(!line){result.push(['']);continue;}
+    const segs=parseSegments(line);
+    // build words with tag flag
+    const words=[];
+    segs.forEach(s=>{
+      const parts=s.text.split(' ');
+      parts.forEach((p,i)=>{
+        if(p)words.push({text:p,tag:s.tag});
+      });
+    });
+    let curLine=[];
+    let curW=0;
+    for(const w of words){
+      ctx.font=w.tag?`bold ${fontSize}px ${FONT_MAP[currentFont]}`:`${fontSize}px ${FONT_MAP[currentFont]}`;
+      const ww=ctx.measureText(w.text+' ').width;
+      if(curW+ww>maxW&&curLine.length>0){
+        result.push(curLine);
+        curLine=[w];
+        curW=ww;
+      }else{
+        curLine.push(w);
+        curW+=ww;
+      }
+    }
+    if(curLine.length)result.push(curLine);
+  }
+  return result;
+}
+
+function render(){
+  drawBackground();
+  const text=textInput.value||'Your text here.\n#TryTyping';
+  const lines=text.split('\n');
+  const color=TEXT_COLORS[currentColor].v;
+  const fontFam=FONT_MAP[currentFont];
+  const padding=canvasW*0.08;
+  const maxW=canvasW-padding*2;
+  // auto-size font
+  let fontSize=Math.round(canvasW/22);
+  if(fontSize>72)fontSize=72;
+  if(fontSize<24)fontSize=24;
+  const wrapped=wrapText(lines,maxW,fontSize);
+  const lineH=fontSize*1.45;
+  const totalH=wrapped.length*lineH;
+  let startY=(canvasH-totalH)/2+fontSize*0.35;
+  // scale down if overflowing
+  if(totalH>canvasH-padding*2){
+    const ratio=(canvasH-padding*2)/totalH;
+    fontSize=Math.floor(fontSize*ratio);
+    const rewrapped=wrapText(lines,maxW,fontSize);
+    const newH=rewrapped.length*fontSize*1.45;
+    startY=(canvasH-newH)/2+fontSize*0.35;
+    drawWrapped(rewrapped,startY,fontSize,lineH*ratio,color,fontFam);
+    return;
+  }
+  drawWrapped(wrapped,startY,fontSize,lineH,color,fontFam);
+}
+
+function drawWrapped(wrapped,startY,fontSize,lineH,color,fontFam){
+  const padding=canvasW*0.08;
+  const maxW=canvasW-padding*2;
+  wrapped.forEach((words,lineIdx)=>{
+    const y=startY+lineIdx*lineH;
+    // measure total width to center
+    let totalW=0;
+    words.forEach((w,i)=>{
+      ctx.font=w.tag?`bold ${fontSize}px ${fontFam}`:`${fontSize}px ${fontFam}`;
+      const tw=ctx.measureText(w.text).width;
+      totalW+=tw;
+      if(i<words.length-1)totalW+=ctx.measureText(' ').width;
+    });
+    // vertical centering with subtle shadow
+    ctx.textBaseline='middle';
+    ctx.textAlign='center';
+    const cx=canvasW/2;
+    ctx.save();
+    ctx.shadowColor='rgba(0,0,0,0.45)';
+    ctx.shadowBlur=8;
+    ctx.shadowOffsetY=2;
+    let x=cx-totalW/2;
+    words.forEach((w,i)=>{
+      ctx.font=w.tag?`bold ${fontSize}px ${fontFam}`:`${fontSize}px ${fontFam}`;
+      ctx.fillStyle=w.tag?HASHTAG_COLOR:color;
+      ctx.textAlign='left';
+      ctx.fillText(w.text,x,y);
+      x+=ctx.measureText(w.text).width;
+      if(i<words.length-1)x+=ctx.measureText(' ').width;
+    });
+    ctx.restore();
+  });
+}
+
+function download(){
+  const link=document.createElement('a');
+  link.download='social-image-'+canvasW+'x'+canvasH+'.png';
+  link.href=canvas.toDataURL('image/png');
+  link.click();
+}
+
+// Events
+textInput.addEventListener('input',render);
+fontSelect.addEventListener('change',e=>{currentFont=e.target.value;render();});
+downloadBtn.addEventListener('click',download);
+document.querySelectorAll('.size-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    resizeCanvas(+btn.dataset.w,+btn.dataset.h);
+  });
+});
+
+buildUI();
+render();
+})();
+</script>
+</body>
+</html>

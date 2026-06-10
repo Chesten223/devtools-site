@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSV Viewer & Analyzer – View CSV Files Online Free</title>
+<meta name="description" content="Free online CSV viewer and analyzer. Paste or upload CSV files, sort columns, search data, detect column types, and export as JSON. No signup required.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--card:#111827;--accent:#22c55e;--accent-hover:#16a34a;--border:#1f2937;--text:#e5e7eb;--text-muted:#9ca3af;--danger:#ef4444;--header-bg:#1f2937}
+html{font-size:15px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5;min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+
+.container{max-width:1200px;margin:0 auto;padding:1.5rem 1rem}
+
+header{text-align:center;margin-bottom:2rem}
+header h1{font-size:1.75rem;font-weight:700;color:#fff;margin-bottom:.35rem}
+header p{color:var(--text-muted);font-size:.9rem}
+
+/* Upload area */
+.upload-zone{background:var(--card);border:2px dashed var(--border);border-radius:10px;padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:1.25rem}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:rgba(34,197,94,.04)}
+.upload-zone svg{margin-bottom:.75rem;opacity:.5}
+.upload-zone p{color:var(--text-muted);font-size:.9rem}
+.upload-zone .browse-link{color:var(--accent);font-weight:600}
+
+/* Textarea */
+.paste-area{display:none;margin-bottom:1.25rem}
+.paste-area textarea{width:100%;min-height:160px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.75rem;font-family:"Courier New",monospace;font-size:.85rem;resize:vertical;outline:none}
+.paste-area textarea:focus{border-color:var(--accent)}
+
+/* Toggle buttons row */
+.input-toggle{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.input-toggle button{background:var(--card);border:1px solid var(--border);color:var(--text-muted);padding:.45rem .9rem;border-radius:6px;cursor:pointer;font-size:.8rem;transition:all .15s}
+.input-toggle button.active{border-color:var(--accent);color:var(--accent);background:rgba(34,197,94,.08)}
+
+/* Toolbar */
+.toolbar{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.toolbar input[type="text"]{flex:1;min-width:180px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.45rem .75rem;font-size:.85rem;outline:none}
+.toolbar input[type="text"]:focus{border-color:var(--accent)}
+.toolbar input[type="text"]::placeholder{color:var(--text-muted)}
+.btn{display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .85rem;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:.8rem;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn-accent{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600}
+.btn-accent:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:#000}
+
+/* Stats bar */
+.stats{display:flex;gap:1.25rem;margin-bottom:1rem;flex-wrap:wrap}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.6rem 1rem;font-size:.8rem;display:flex;align-items:center;gap:.5rem}
+.stat-value{color:var(--accent);font-weight:700;font-size:1rem}
+.stat-label{color:var(--text-muted)}
+
+/* Column type badges */
+.col-type{display:inline-block;font-size:.65rem;padding:.1rem .35rem;border-radius:3px;margin-left:.35rem;font-weight:600;text-transform:uppercase;vertical-align:middle}
+.col-type.number{background:rgba(59,130,246,.2);color:#60a5fa}
+.col-type.date{background:rgba(168,85,247,.2);color:#c084fc}
+.col-type.text{background:rgba(251,191,36,.15);color:#fbbf24}
+
+/* Table */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead th{background:var(--header-bg);color:var(--text);padding:.6rem .75rem;text-align:left;font-weight:600;white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1}
+thead th:hover{background:#2d3748}
+thead th .sort-arrow{margin-left:.3rem;opacity:.3;font-size:.7rem}
+thead th.sort-asc .sort-arrow,thead th.sort-desc .sort-arrow{opacity:1;color:var(--accent)}
+tbody td{padding:.5rem .75rem;border-bottom:1px solid var(--border);white-space:nowrap;max-width:320px;overflow:hidden;text-overflow:ellipsis}
+tbody tr:hover{background:rgba(34,197,94,.04)}
+tbody tr:nth-child(even){background:rgba(255,255,255,.015)}
+tbody tr:nth-child(even):hover{background:rgba(34,197,94,.04)}
+
+/* Empty state */
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text-muted)}
+.empty-state svg{margin-bottom:1rem;opacity:.3}
+
+/* Toast */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--accent);color:#000;padding:.6rem 1.2rem;border-radius:8px;font-weight:600;font-size:.85rem;opacity:0;transform:translateY(10px);transition:all .25s;z-index:999;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* Pagination */
+.pagination{display:flex;justify-content:center;align-items:center;gap:.5rem;margin-top:1rem;flex-wrap:wrap}
+.pagination button{background:var(--card);border:1px solid var(--border);color:var(--text-muted);padding:.35rem .7rem;border-radius:5px;cursor:pointer;font-size:.78rem}
+.pagination button:hover{border-color:var(--accent);color:var(--accent)}
+.pagination button.active{border-color:var(--accent);color:var(--accent);background:rgba(34,197,94,.1)}
+.pagination button:disabled{opacity:.3;cursor:default}
+.pagination .page-info{color:var(--text-muted);font-size:.78rem}
+
+/* Responsive */
+@media(max-width:640px){
+  header h1{font-size:1.35rem}
+  .stats{gap:.5rem}
+  .stat{padding:.4rem .65rem;font-size:.75rem}
+  .toolbar{flex-direction:column}
+  .toolbar input[type="text"]{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>CSV Viewer &amp; Analyzer</h1>
+    <p>Paste or upload a CSV file to view, sort, search, and export your data instantly.</p>
+  </header>
+
+  <!-- Input toggle -->
+  <div class="input-toggle">
+    <button id="btnUpload" class="active" onclick="switchInput('upload')">Upload File</button>
+    <button id="btnPaste" onclick="switchInput('paste')">Paste CSV</button>
+    <button id="btnSample" onclick="loadSample()">Load Sample</button>
+  </div>
+
+  <!-- Upload zone -->
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <p>Drag &amp; drop a CSV file here, or <span class="browse-link">browse</span></p>
+    <input type="file" id="fileInput" accept=".csv,.tsv,.txt" style="display:none" onchange="handleFile(event)">
+  </div>
+
+  <!-- Paste area -->
+  <div class="paste-area" id="pasteArea">
+    <textarea id="csvText" placeholder="Paste your CSV data here..."></textarea>
+    <div style="margin-top:.5rem;display:flex;gap:.5rem">
+      <button class="btn btn-accent" onclick="parsePasted()">Parse CSV</button>
+      <button class="btn" onclick="document.getElementById('csvText').value='';parsePasted()">Clear</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats" id="stats" style="display:none">
+    <div class="stat"><span class="stat-value" id="statRows">0</span><span class="stat-label">Rows</span></div>
+    <div class="stat"><span class="stat-value" id="statCols">0</span><span class="stat-label">Columns</span></div>
+    <div class="stat"><span class="stat-value" id="statSize">0</span><span class="stat-label">Size</span></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar" id="toolbar" style="display:none">
+    <input type="text" id="searchInput" placeholder="Search across all columns..." oninput="filterTable()">
+    <button class="btn" onclick="copyTSV()" title="Copy as TSV">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy TSV
+    </button>
+    <button class="btn" onclick="copyJSON()" title="Copy as JSON">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy JSON
+    </button>
+    <button class="btn btn-accent" onclick="exportJSON()" title="Export as JSON file">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export JSON
+    </button>
+    <button class="btn" onclick="resetAll()" title="Clear data">Reset</button>
+  </div>
+
+  <!-- Table -->
+  <div id="tableContainer" style="display:none">
+    <div class="table-wrap" id="tableWrap" style="max-height:65vh;overflow-y:auto"></div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// State
+let headers = [];
+let rows = [];
+let colTypes = [];
+let filteredRows = [];
+let sortCol = -1;
+let sortDir = 'asc';
+const PAGE_SIZE = 100;
+let currentPage = 0;
+
+// -- Input switching --
+function switchInput(mode) {
+  document.getElementById('btnUpload').classList.toggle('active', mode === 'upload');
+  document.getElementById('btnPaste').classList.toggle('active', mode === 'paste');
+  document.getElementById('uploadZone').style.display = mode === 'upload' ? '' : 'none';
+  document.getElementById('pasteArea').style.display = mode === 'paste' ? '' : 'none';
+}
+
+// -- Drag & drop --
+const uz = document.getElementById('uploadZone');
+uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('dragover'); });
+uz.addEventListener('dragleave', () => uz.classList.remove('dragover'));
+uz.addEventListener('drop', e => {
+  e.preventDefault(); uz.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f) readFile(f);
+});
+
+function handleFile(e) {
+  const f = e.target.files[0];
+  if (f) readFile(f);
+}
+
+function readFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => processCSV(reader.result, file.size);
+  reader.readAsText(file);
+}
+
+function parsePasted() {
+  const text = document.getElementById('csvText').value.trim();
+  if (!text) { clearData(); return; }
+  processCSV(text, new Blob([text]).size);
+}
+
+function loadSample() {
+  const sample = `Name,Age,Email,City,Salary,Join Date
+Alice Johnson,28,alice@example.com,New York,72000,2021-03-15
+Bob Smith,35,bob@example.com,San Francisco,95000,2019-07-22
+Carol Williams,42,carol@example.com,Chicago,88000,2018-01-10
+Dave Brown,31,dave@example.com,Boston,67000,2022-11-05
+Eve Davis,26,eve@example.com,Seattle,79000,2023-02-28
+Frank Miller,38,frank@example.com,Austin,91000,2020-06-14
+Grace Lee,29,grace@example.com,Denver,64000,2022-09-01
+Henry Wilson,45,henry@example.com,Portland,102000,2017-04-18
+Iris Taylor,33,iris@example.com,Miami,73000,2021-08-22
+Jack Anderson,27,jack@example.com,Nashville,58000,2023-05-10
+Kate Thomas,41,kate@example.com,San Diego,97000,2019-12-03
+Leo Jackson,36,leo@example.com,Atlanta,85000,2020-03-27
+Mia White,24,mia@example.com,Houston,62000,2024-01-15
+Noah Harris,39,noah@example.com,Phoenix,89000,2018-10-08
+Olivia Martin,30,olivia@example.com,Minneapolis,76000,2022-07-19`;
+  document.getElementById('csvText').value = sample;
+  switchInput('paste');
+  processCSV(sample, new Blob([sample]).size);
+}
+
+// -- CSV Parser (RFC 4180 compliant) --
+function parseCSV(text) {
+  const result = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (i + 1 < text.length && text[i + 1] === '"') { field += '"'; i++; }
+        else { inQuotes = false; }
+      } else { field += c; }
+    } else {
+      if (c === '"') { inQuotes = true; }
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\r') {
+        if (i + 1 < text.length && text[i + 1] === '\n') i++;
+        row.push(field); field = '';
+        if (row.length > 0) result.push(row);
+        row = [];
+      } else if (c === '\n') {
+        row.push(field); field = '';
+        if (row.length > 0) result.push(row);
+        row = [];
+      } else { field += c; }
+    }
+  }
+  if (field || row.length > 0) { row.push(field); result.push(row); }
+  return result;
+}
+
+// -- Type detection --
+function detectType(values) {
+  let numCount = 0, dateCount = 0, total = 0;
+  for (const v of values) {
+    if (v === '' || v === null || v === undefined) continue;
+    total++;
+    const t = v.trim();
+    if (!t) continue;
+    // Number check
+    if (!isNaN(t) && t !== '') numCount++;
+    // Date check
+    else if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}/.test(t) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}/.test(t)) dateCount++;
+  }
+  if (total === 0) return 'text';
+  if (numCount / total > 0.8) return 'number';
+  if (dateCount / total > 0.8) return 'date';
+  return 'text';
+}
+
+// -- Process CSV --
+function processCSV(text, fileSize) {
+  const parsed = parseCSV(text.trim());
+  if (parsed.length < 1) return;
+
+  headers = parsed[0].map(h => h.trim());
+  rows = [];
+  for (let i = 1; i < parsed.length; i++) {
+    const r = parsed[i];
+    if (r.length === 1 && r[0].trim() === '') continue;
+    const row = [];
+    for (let j = 0; j < headers.length; j++) row.push(j < r.length ? r[j] : '');
+    rows.push(row);
+  }
+
+  // Detect column types
+  colTypes = headers.map((_, ci) => {
+    const vals = rows.map(r => r[ci]);
+    return detectType(vals);
+  });
+
+  filteredRows = rows.slice();
+  sortCol = -1; sortDir = 'asc'; currentPage = 0;
+  document.getElementById('searchInput').value = '';
+
+  // Stats
+  document.getElementById('statRows').textContent = rows.length.toLocaleString();
+  document.getElementById('statCols').textContent = headers.length;
+  document.getElementById('statSize').textContent = formatSize(fileSize);
+  document.getElementById('stats').style.display = '';
+  document.getElementById('toolbar').style.display = '';
+  document.getElementById('tableContainer').style.display = '';
+
+  renderTable();
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function clearData() {
+  headers = []; rows = []; colTypes = []; filteredRows = [];
+  document.getElementById('stats').style.display = 'none';
+  document.getElementById('toolbar').style.display = 'none';
+  document.getElementById('tableContainer').style.display = 'none';
+}
+
+function resetAll() {
+  clearData();
+  document.getElementById('csvText').value = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('searchInput').value = '';
+}
+
+// -- Search / Filter --
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  if (!q) { filteredRows = rows.slice(); } else {
+    filteredRows = rows.filter(r => r.some(c => String(c).toLowerCase().includes(q)));
+  }
+  currentPage = 0;
+  if (sortCol >= 0) applySortToFiltered();
+  renderTable();
+}
+
+// -- Sorting --
+function sortBy(ci) {
+  if (sortCol === ci) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
+  else { sortCol = ci; sortDir = 'asc'; }
+  applySortToFiltered();
+  renderTable();
+}
+
+function applySortToFiltered() {
+  const ci = sortCol, dir = sortDir;
+  const type = colTypes[ci];
+  filteredRows.sort((a, b) => {
+    let va = a[ci], vb = b[ci];
+    if (type === 'number') { va = parseFloat(va) || 0; vb = parseFloat(vb) || 0; return dir === 'asc' ? va - vb : vb - va; }
+    if (type === 'date') { va = new Date(va).getTime() || 0; vb = new Date(vb).getTime() || 0; return dir === 'asc' ? va - vb : vb - va; }
+    va = String(va).toLowerCase(); vb = String(vb).toLowerCase();
+    if (va < vb) return dir === 'asc' ? -1 : 1;
+    if (va > vb) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+// -- Render --
+function renderTable() {
+  const wrap = document.getElementById('tableWrap');
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+  if (currentPage >= totalPages) currentPage = totalPages - 1;
+  const start = currentPage * PAGE_SIZE;
+  const pageRows = filteredRows.slice(start, start + PAGE_SIZE);
+
+  let html = '<table><thead><tr>';
+  headers.forEach((h, i) => {
+    const arrow = sortCol === i ? (sortDir === 'asc' ? '▲' : '▼') : '▲';
+    const cls = sortCol === i ? (sortDir === 'asc' ? 'sort-asc' : 'sort-desc') : '';
+    html += `<th class="${cls}" onclick="sortBy(${i})">${escHtml(h)} <span class="col-type ${colTypes[i]}">${colTypes[i]}</span><span class="sort-arrow">${arrow}</span></th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  if (pageRows.length === 0) {
+    html += `<tr><td colspan="${headers.length}" style="text-align:center;color:var(--text-muted);padding:2rem">No matching rows found</td></tr>`;
+  } else {
+    for (const r of pageRows) {
+      html += '<tr>';
+      for (let i = 0; i < headers.length; i++) {
+        let v = r[i] || '';
+        if (colTypes[i] === 'number' && v !== '') {
+          const n = parseFloat(v);
+          if (!isNaN(n)) v = n.toLocaleString();
+        }
+        html += `<td title="${escAttr(r[i] || '')}">${escHtml(v)}</td>`;
+      }
+      html += '</tr>';
+    }
+  }
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+
+  // Pagination
+  const pg = document.getElementById('pagination');
+  if (totalPages <= 1) { pg.innerHTML = ''; return; }
+  let ph = `<button ${currentPage === 0 ? 'disabled' : ''} onclick="goPage(0)">«</button>`;
+  ph += `<button ${currentPage === 0 ? 'disabled' : ''} onclick="goPage(${currentPage - 1})">‹</button>`;
+
+  let s = Math.max(0, currentPage - 3), e = Math.min(totalPages - 1, currentPage + 3);
+  if (s > 0) ph += '<button disabled>…</button>';
+  for (let i = s; i <= e; i++) {
+    ph += `<button class="${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i + 1}</button>`;
+  }
+  if (e < totalPages - 1) ph += '<button disabled>…</button>';
+
+  ph += `<button ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="goPage(${currentPage + 1})">›</button>`;
+  ph += `<button ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="goPage(${totalPages - 1})">»</button>`;
+  ph += `<span class="page-info">${start + 1}–${Math.min(start + PAGE_SIZE, filteredRows.length)} of ${filteredRows.length}</span>`;
+  pg.innerHTML = ph;
+}
+
+function goPage(p) { currentPage = p; renderTable(); document.getElementById('tableWrap').scrollTop = 0; }
+
+// -- Copy / Export --
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function rowsToJSON() {
+  return filteredRows.map(r => {
+    const obj = {};
+    headers.forEach((h, i) => {
+      let v = r[i];
+      if (colTypes[i] === 'number' && v !== '') { const n = parseFloat(v); if (!isNaN(n)) v = n; }
+      obj[h] = v;
+    });
+    return obj;
+  });
+}
+
+function copyTSV() {
+  if (!filteredRows.length) return;
+  const tsv = [headers.join('\t'), ...filteredRows.map(r => r.join('\t'))].join('\n');
+  navigator.clipboard.writeText(tsv).then(() => showToast('TSV copied to clipboard'));
+}
+
+function copyJSON() {
+  if (!filteredRows.length) return;
+  const json = JSON.stringify(rowsToJSON(), null, 2);
+  navigator.clipboard.writeText(json).then(() => showToast('JSON copied to clipboard'));
+}
+
+function exportJSON() {
+  if (!filteredRows.length) return;
+  const json = JSON.stringify(rowsToJSON(), null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'data.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('JSON file downloaded');
+}
+
+// -- HTML escaping --
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>

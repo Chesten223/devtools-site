@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diff Checker - Compare Text Differences Online</title>
+<meta name="description" content="Compare text differences side-by-side with character, word, and line-level diff highlighting.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--card:#111827;--card2:#1e2535;--accent:#22c55e;--text:#e5e7eb;--muted:#6b7280;--border:#1f2937;--red:#ef4444;--green:#22c55e;--yellow:#eab308;--red-bg:rgba(239,68,68,.12);--green-bg:rgba(34,197,94,.12);--yellow-bg:rgba(234,179,8,.12);--radius:8px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+h1{text-align:center;font-size:1.8rem;font-weight:700;margin-bottom:4px}
+.subtitle{text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:20px}
+
+/* Toolbar */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-bottom:16px;padding:12px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border)}
+.toolbar .sep{width:1px;height:24px;background:var(--border);margin:0 4px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--border);background:var(--card2);color:var(--text);border-radius:6px;cursor:pointer;font-size:.82rem;transition:all .15s}
+.btn:hover{border-color:var(--accent);color:#fff}
+.btn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
+.btn-accent{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
+.btn-accent:hover{opacity:.9;color:#000}
+.btn-sm{padding:5px 10px;font-size:.78rem}
+
+/* Input area */
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:768px){.input-grid{grid-template-columns:1fr}}
+.input-col{position:relative}
+.input-col label{display:block;font-size:.82rem;font-weight:600;margin-bottom:6px;color:var(--muted)}
+textarea{width:100%;height:240px;padding:12px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);font-family:'SF Mono',Monaco,'Cascadia Code','Fira Code',monospace;font-size:.82rem;resize:vertical;outline:none;transition:border-color .15s}
+textarea:focus{border-color:var(--accent)}
+textarea::placeholder{color:var(--muted)}
+
+/* File drop overlay */
+.drop-overlay{position:absolute;inset:0;background:rgba(34,197,94,.08);border:2px dashed var(--accent);border-radius:var(--radius);display:none;align-items:center;justify-content:center;font-size:.9rem;color:var(--accent);pointer-events:none;z-index:5}
+.input-col.dragover .drop-overlay{display:flex}
+
+/* Compare button row */
+.compare-row{display:flex;justify-content:center;margin-bottom:16px}
+
+/* Stats */
+.stats{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-bottom:16px;padding:10px 16px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border)}
+.stat{display:flex;align-items:center;gap:6px;font-size:.82rem}
+.stat .dot{width:10px;height:10px;border-radius:50%}
+.stat .val{font-weight:700;min-width:24px}
+
+/* Diff output */
+.diff-output{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.diff-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--card2);border-bottom:1px solid var(--border);font-size:.82rem}
+.diff-body{overflow:auto;max-height:600px;font-family:'SF Mono',Monaco,'Cascadia Code','Fira Code',monospace;font-size:.8rem;line-height:1.7}
+
+/* Unified diff */
+.unified .diff-line{display:flex;padding:0 16px;min-height:1.7em}
+.unified .ln{display:inline-block;width:40px;min-width:40px;color:var(--muted);text-align:right;padding-right:12px;user-select:none;border-right:1px solid var(--border);margin-right:12px;font-size:.75rem;line-height:1.7}
+.unified .prefix{display:inline-block;width:16px;min-width:16px;font-weight:700}
+.unified .content{white-space:pre-wrap;word-break:break-all}
+.unified .diff-line.add{background:var(--green-bg)}
+.unified .diff-line.add .prefix{color:var(--green)}
+.unified .diff-line.del{background:var(--red-bg)}
+.unified .diff-line.del .prefix{color:var(--red)}
+.unified .diff-line.mod{background:var(--yellow-bg)}
+.unified .diff-line.mod .prefix{color:var(--yellow)}
+.unified .diff-line.ctx{color:var(--muted)}
+.unified .diff-line.separator{background:var(--card2);justify-content:center;color:var(--muted);font-style:italic;padding:4px 16px;font-size:.78rem}
+.unified .diff-line.separator .ln{border-right:none}
+
+/* Side-by-side */
+.sbs-grid{display:grid;grid-template-columns:1fr 1fr}
+.sbs-panel{overflow:auto;max-height:600px}
+.sbs-panel+.sbs-panel{border-left:1px solid var(--border)}
+.sbs-line{display:flex;padding:0 12px;min-height:1.7em}
+.sbs-line .ln{display:inline-block;width:40px;min-width:40px;color:var(--muted);text-align:right;padding-right:10px;user-select:none;font-size:.75rem;line-height:1.7}
+.sbs-line .content{white-space:pre-wrap;word-break:break-all}
+.sbs-line.add{background:var(--green-bg)}
+.sbs-line.del{background:var(--red-bg)}
+.sbs-line.mod{background:var(--yellow-bg)}
+.sbs-line.ctx{color:var(--muted)}
+.sbs-line.empty{background:rgba(107,114,128,.06)}
+
+/* Inline highlights for char-level */
+.highlight-add{background:rgba(34,197,94,.35);border-radius:2px;padding:0 1px}
+.highlight-del{background:rgba(239,68,68,.35);border-radius:2px;padding:0 1px}
+
+/* Hidden file input */
+input[type=file]{display:none}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;padding:8px 20px;border-radius:6px;font-size:.85rem;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Diff Checker</h1>
+  <p class="subtitle">Compare text differences side-by-side with character, word, and line-level diff highlighting.</p>
+
+  <div class="toolbar">
+    <strong style="font-size:.82rem;color:var(--muted)">Mode:</strong>
+    <button class="btn btn-sm active" data-mode="line" onclick="setMode('line')">Line</button>
+    <button class="btn btn-sm" data-mode="word" onclick="setMode('word')">Word</button>
+    <button class="btn btn-sm" data-mode="char" onclick="setMode('char')">Char</button>
+    <div class="sep"></div>
+    <strong style="font-size:.82rem;color:var(--muted)">View:</strong>
+    <button class="btn btn-sm active" data-view="unified" onclick="setView('unified')">Unified</button>
+    <button class="btn btn-sm" data-view="sbs" onclick="setView('sbs')">Side-by-Side</button>
+    <div class="sep"></div>
+    <button class="btn btn-sm" onclick="swapInputs()">&#x21c4; Swap</button>
+    <button class="btn btn-sm" onclick="clearAll()">&#x2715; Clear</button>
+  </div>
+
+  <div class="input-grid">
+    <div class="input-col" id="col-left">
+      <label>Original Text</label>
+      <textarea id="left-text" placeholder="Paste original text here or drag &amp; drop a file..."></textarea>
+      <div class="drop-overlay">Drop file here</div>
+    </div>
+    <div class="input-col" id="col-right">
+      <label>Modified Text</label>
+      <textarea id="right-text" placeholder="Paste modified text here or drag &amp; drop a file..."></textarea>
+      <div class="drop-overlay">Drop file here</div>
+    </div>
+  </div>
+
+  <input type="file" id="file-left" accept=".txt,.md,.json,.js,.ts,.py,.html,.css,.xml,.csv,.log,.diff,.patch,.yaml,.yml,.toml,.cfg,.ini,.sh,.bat,.sql">
+  <input type="file" id="file-right" accept=".txt,.md,.json,.js,.ts,.py,.html,.css,.xml,.csv,.log,.diff,.patch,.yaml,.yml,.toml,.cfg,.ini,.sh,.bat,.sql">
+
+  <div class="compare-row">
+    <button class="btn btn-accent" onclick="runDiff()" style="padding:10px 32px;font-size:.9rem">Compare</button>
+  </div>
+
+  <div id="stats-bar" class="stats" style="display:none">
+    <div class="stat"><span class="dot" style="background:var(--green)"></span>Added: <span class="val" id="stat-add">0</span></div>
+    <div class="stat"><span class="dot" style="background:var(--red)"></span>Removed: <span class="val" id="stat-del">0</span></div>
+    <div class="stat"><span class="dot" style="background:var(--yellow)"></span>Changed: <span class="val" id="stat-chg">0</span></div>
+    <div class="stat">Lines: <span class="val" id="stat-total">0</span></div>
+  </div>
+
+  <div id="diff-output" class="diff-output" style="display:none">
+    <div class="diff-header">
+      <span id="diff-title">Diff Result</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="copyDiff()">&#x2398; Copy</button>
+        <button class="btn btn-sm" onclick="exportDiff()">&#x2913; Export .diff</button>
+      </div>
+    </div>
+    <div id="diff-body" class="diff-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ───
+let currentMode = 'line';
+let currentView = 'unified';
+let lastDiffResult = null;
+
+const $left = document.getElementById('left-text');
+const $right = document.getElementById('right-text');
+const $diffBody = document.getElementById('diff-body');
+const $diffOutput = document.getElementById('diff-output');
+const $statsBar = document.getElementById('stats-bar');
+
+// ─── LCS diff engine ───
+function lcs(a, b) {
+  const m = a.length, n = b.length;
+  // Use 1D rolling array to save memory
+  let prev = new Uint16Array(n + 1);
+  let curr = new Uint16Array(n + 1);
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      curr[j] = a[i-1] === b[j-1] ? prev[j-1] + 1 : Math.max(prev[j], curr[j-1]);
+    }
+    [prev, curr] = [curr, prev];
+    curr.fill(0);
+  }
+  // Backtrack to get edit script
+  // Rebuild full table for backtracking (acceptable for typical text sizes)
+  const dp = [];
+  for (let i = 0; i <= m; i++) {
+    dp[i] = new Uint16Array(n + 1);
+    if (i > 0) {
+      for (let j = 1; j <= n; j++) {
+        dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] + 1 : Math.max(dp[i-1][j], dp[i][j-1]);
+      }
+    }
+  }
+  const ops = [];
+  let i = m, j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && a[i-1] === b[j-1]) {
+      ops.push({type:'eq', left:a[i-1], right:b[j-1], li:i-1, ri:j-1});
+      i--; j--;
+    } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
+      ops.push({type:'add', val:b[j-1], ri:j-1});
+      j--;
+    } else {
+      ops.push({type:'del', val:a[i-1], li:i-1});
+      i--;
+    }
+  }
+  ops.reverse();
+  return ops;
+}
+
+// Group ops into line-level changes for line mode
+function groupLineChanges(linesL, linesR) {
+  const ops = lcs(linesL, linesR);
+  const result = [];
+  let i = 0;
+  while (i < ops.length) {
+    const op = ops[i];
+    if (op.type === 'eq') {
+      result.push({type:'ctx', left:op.left, right:op.right, lnL:op.li+1, lnR:op.ri+1});
+      i++;
+    } else {
+      // Collect consecutive del+add as a change group
+      const dels = [], adds = [];
+      while (i < ops.length && ops[i].type === 'del') {
+        dels.push(ops[i]); i++;
+      }
+      while (i < ops.length && ops[i].type === 'add') {
+        adds.push(ops[i]); i++;
+      }
+      // Pair dels and adds as modifications
+      const pairs = Math.min(dels.length, adds.length);
+      for (let k = 0; k < pairs; k++) {
+        result.push({type:'mod', left:dels[k].val, right:adds[k].val, lnL:dels[k].li+1, lnR:adds[k].ri+1});
+      }
+      for (let k = pairs; k < dels.length; k++) {
+        result.push({type:'del', left:dels[k].val, lnL:dels[k].li+1});
+      }
+      for (let k = pairs; k < adds.length; k++) {
+        result.push({type:'add', right:adds[k].val, lnR:adds[k].ri+1});
+      }
+    }
+  }
+  return result;
+}
+
+// Tokenize for word mode
+function tokenizeWords(text) {
+  const tokens = [];
+  const re = /\S+|\s+/g;
+  let m;
+  while ((m = re.exec(text)) !== null) tokens.push(m[0]);
+  return tokens;
+}
+
+// Inline diff for modified lines (char-level highlighting)
+function inlineDiff(oldStr, newStr) {
+  const a = Array.from(oldStr), b = Array.from(newStr);
+  const ops = lcs(a, b);
+  let html = '';
+  for (const op of ops) {
+    if (op.type === 'eq') html += escHtml(op.left);
+    else if (op.type === 'del') html += '<span class="highlight-del">' + escHtml(op.val) + '</span>';
+    else if (op.type === 'add') html += '<span class="highlight-add">' + escHtml(op.val) + '</span>';
+  }
+  return html;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── Diff runners ───
+function runDiff() {
+  const left = $left.value;
+  const right = $right.value;
+  if (!left && !right) return;
+
+  if (currentMode === 'line') runLineDiff(left, right);
+  else if (currentMode === 'word') runWordDiff(left, right);
+  else runCharDiff(left, right);
+}
+
+function runLineDiff(left, right) {
+  const linesL = left.split('\n');
+  const linesR = right.split('\n');
+  const groups = groupLineChanges(linesL, linesR);
+  lastDiffResult = groups;
+
+  let additions = 0, deletions = 0, changes = 0;
+  for (const g of groups) {
+    if (g.type === 'add') additions++;
+    else if (g.type === 'del') deletions++;
+    else if (g.type === 'mod') changes++;
+  }
+
+  showStats(additions, deletions, changes, groups.length);
+
+  if (currentView === 'unified') renderUnifiedLine(groups);
+  else renderSbsLine(groups);
+}
+
+function runWordDiff(left, right) {
+  const linesL = left.split('\n');
+  const linesR = right.split('\n');
+  const groups = groupLineChanges(linesL, linesR);
+  lastDiffResult = groups;
+
+  let additions = 0, deletions = 0, changes = 0;
+  for (const g of groups) {
+    if (g.type === 'add') additions++;
+    else if (g.type === 'del') deletions++;
+    else if (g.type === 'mod') changes++;
+  }
+  showStats(additions, deletions, changes, groups.length);
+
+  if (currentView === 'unified') renderUnifiedWord(groups);
+  else renderSbsWord(groups);
+}
+
+function runCharDiff(left, right) {
+  const linesL = left.split('\n');
+  const linesR = right.split('\n');
+  const groups = groupLineChanges(linesL, linesR);
+  lastDiffResult = groups;
+
+  let additions = 0, deletions = 0, changes = 0;
+  for (const g of groups) {
+    if (g.type === 'add') additions++;
+    else if (g.type === 'del') deletions++;
+    else if (g.type === 'mod') changes++;
+  }
+  showStats(additions, deletions, changes, groups.length);
+
+  if (currentView === 'unified') renderUnifiedChar(groups);
+  else renderSbsChar(groups);
+}
+
+// ─── Renderers ───
+function renderUnifiedLine(groups) {
+  let html = '<div class="unified">';
+  for (const g of groups) {
+    if (g.type === 'ctx') {
+      html += `<div class="diff-line ctx"><span class="ln">${g.lnL}</span><span class="ln">${g.lnR}</span><span class="prefix"> </span><span class="content">${escHtml(g.left)}</span></div>`;
+    } else if (g.type === 'mod') {
+      html += `<div class="diff-line del"><span class="ln">${g.lnL}</span><span class="ln"></span><span class="prefix">-</span><span class="content">${escHtml(g.left)}</span></div>`;
+      html += `<div class="diff-line add"><span class="ln"></span><span class="ln">${g.lnR}</span><span class="prefix">+</span><span class="content">${escHtml(g.right)}</span></div>`;
+    } else if (g.type === 'del') {
+      html += `<div class="diff-line del"><span class="ln">${g.lnL}</span><span class="ln"></span><span class="prefix">-</span><span class="content">${escHtml(g.left)}</span></div>`;
+    } else if (g.type === 'add') {
+      html += `<div class="diff-line add"><span class="ln"></span><span class="ln">${g.lnR}</span><span class="prefix">+</span><span class="content">${escHtml(g.right)}</span></div>`;
+    }
+  }
+  html += '</div>';
+  $diffBody.innerHTML = html;
+  $diffOutput.style.display = '';
+}
+
+function renderSbsLine(groups) {
+  let leftHtml = '', rightHtml = '';
+  for (const g of groups) {
+    if (g.type === 'ctx') {
+      leftHtml += `<div class="sbs-line ctx"><span class="ln">${g.lnL}</span><span class="content">${escHtml(g.left)}</span></div>`;
+      rightHtml += `<div class="sbs-line ctx"><span class="ln">${g.lnR}</span><span class="content">${escHtml(g.right)}</span></div>`;
+    } else if (g.type === 'mod') {
+      leftHtml += `<div class="sbs-line mod"><span class="ln">${g.lnL}</span><span class="content">${escHtml(g.left)}</span></div>`;
+      rightHtml += `<div class="sbs-line mod"><span class="ln">${g.lnR}</span><span class="content">${escHtml(g.right)}</span></div>`;
+    } else if (g.type === 'del') {
+      leftHtml += `<div class="sbs-line del"><span class="ln">${g.lnL}</span><span class="content">${escHtml(g.left)}</span></div>`;
+      rightHtml += `<div class="sbs-line empty"><span class="ln"></span><span class="content"></span></div>`;
+    } else if (g.type === 'add') {
+      leftHtml += `<div class="sbs-line empty"><span class="ln"></span><span class="content"></span></div>`;
+      rightHtml += `<div class="sbs-line add"><span class="ln">${g.lnR}</span><span class="content">${escHtml(g.right)}</span></div>`;
+    }
+  }
+  $diffBody.innerHTML = `<div class="sbs-grid"><div class="sbs-panel">${leftHtml}</div><div class="sbs-panel">${rightHtml}</div></div>`;
+  $diffOutput.style.display = '';
+}
+
+function renderUnifiedWord(groups) {
+  let html = '<div class="unified">';
+  for (const g of groups) {
+    if (g.type === 'ctx') {
+      html += `<div class="diff-line ctx"><span class="ln">${g.lnL}</span><span class="ln">${g.lnR}</span><span class="prefix"> </span><span class="content">${escHtml(g.left)}</span></div>`;
+    } else if (g.type === 'mod') {
+      // Word-level inline diff
+      const wL = tokenizeWords(g.left);
+      const wR = tokenizeWords(g.right);
+      const wOps = lcs(wL, wR);
+      let leftContent = '', rightContent = '';
+      for (const op of wOps) {
+        if (op.type === 'eq') {
+          leftContent += escHtml(op.left);
+          rightContent += escHtml(op.right);
+        } else if (op.type === 'del') {
+          leftContent += '<span class="highlight-del">' + escHtml(op.val) + '</span>';
+        } else if (op.type === 'add') {
+          rightContent += '<span class="highlight-add">' + escHtml(op.val) + '</span>';
+        }
+      }
+      html += `<div class="diff-line del"><span class="ln">${g.lnL}</span><span class="ln"></span><span class="prefix">-</span><span class="content">${leftContent}</span></div>`;
+      html += `<div class="diff-line add"><span class="ln"></span><span class="ln">${g.lnR}</span><span class="prefix">+</span><span class="content">${rightContent}</span></div>`;
+    } else if (g.type === 'del') {
+      html += `<div class="diff-line del"><span class="ln">${g.lnL}</span><span class="ln"></span><span class="prefix">-</span><span class="content">${escHtml(g.left)}</span></div>`;
+    } else if (g.type === 'add') {
+      html += `<div class="diff-line add"><span class="ln"></span><span class="ln">${g.lnR}</span><span class="prefix">+</span><span class="content">${escHtml(g.right)}</span></div>`;
+    }
+  }
+  html += '</div>';
+  $diffBody.innerHTML = html;
+  $diffOutput.style.display = '';
+}
+
+function renderSbsWord(groups) {
+  let leftHtml = '', rightHtml = '';
+  for (const g of groups) {
+    if (g.type === 'ctx') {
+      leftHtml += `<div class="sbs-line ctx"><span class="ln">${g.lnL}</span><span class="content">${escHtml(g.left)}</span></div>`;
+      rightHtml += `<div class="sbs-line ctx"><span class="ln">${g.lnR}</span><span class="content">${escHtml(g.right)}</span></div>`;
+    } else if (g.type === 'mod') {
+      const wL = tokenizeWords(g.left);
+      const wR = tokenizeWords(g.right);
+      const wOps = lcs(wL, wR);
+      let leftContent = '', rightContent = '';
+      for (const op of wOps) {
+        if (op.type === 'eq') {
+          leftContent += escHtml(op.left);
+          rightContent += escHtml(op.right);
+        } else if (op.type === 'del') {
+          leftContent += '<span class="highlight-del">' + escHtml(op.val) + '</span>';
+        } else if (op.type === 'add') {
+          rightContent += '<span class="highlight-add">' + escHtml(op.val) + '</span>';
+        }
+      }
+      leftHtml += `<div class="sbs-line mod"><span class="ln">${g.lnL}</span><span class="content">${leftContent}</span></div>`;
+      rightHtml += `<div class="sbs-line mod"><span class="ln">${g.lnR}</span><span class="content">${rightContent}</span></div>`;
+    } else if (g.type === 'del') {
+      leftHtml += `<div class="sbs-line del"><span class="ln">${g.lnL}</span><span class="content">${escHtml(g.left)}</span></div>`;
+      rightHtml += `<div class="sbs-line empty"><span class="ln"></span><span class="content"></span></div>`;
+    } else if (g.type === 'add') {
+      leftHtml += `<div class="sbs-line empty"><span class="ln"></span><span class="content"></span></div>`;
+      rightHtml += `<div class="sbs-line add"><span class="ln">${g.lnR}</span><span class="content">${escHtml(g.right)}</span></div>`;
+    }
+  }
+  $diffBody.innerHTML = `<div class="sbs-grid"><div class="sbs-panel">${leftHtml}</div><div class="sbs-panel">${rightHtml}</div></div>`;
+  $diffOutput.style.display = '';
+}
+
+function renderUnifiedChar(groups) {
+  let html = '<div class="unified">';
+  for (const g of groups) {
+    if (g.type === 'ctx') {
+      html += `<div class="diff-line ctx"><span class="ln">${g.lnL}</span><span class="ln">${g.lnR}</span><span class="prefix"> </span><span class="content">${escHtml(g.left)}</span></div>`;
+    } else if (g.type === 'mod') {
+      const leftContent = inlineDiff(g.left, g.right);
+      const rightContent = inlineDiff(g.left, g.right);
+      // For char mode, show old line with del highlights, new line with add highlights
+      const aChars = Array.from(g.left), bChars = Array.from(g.right);
+      const cOps = lcs(aChars, bChars);
+      let oldH = '', newH = '';
+      for (const op of cOps) {
+        if (op.type === 'eq') { oldH += escHtml(op.left); newH += escHtml(op.right); }
+        else if (op.type === 'del') { oldH += '<span class="highlight-del">' + escHtml(op.val) + '</span>'; }
+        else if (op.type === 'add') { newH += '<span class="highlight-add">' + escHtml(op.val) + '</span>'; }
+      }
+      html += `<div class="diff-line del"><span class="ln">${g.lnL}</span><span class="ln"></span><span class="prefix">-</span><span class="content">${oldH}</span></div>`;
+      html += `<div class="diff-line add"><span class="ln"></span><span class="ln">${g.lnR}</span><span class="prefix">+</span><span class="content">${newH}</span></div>`;
+    } else if (g.type === 'del') {
+      html += `<div class="diff-line del"><span class="ln">${g.lnL}</span><span class="ln"></span><span class="prefix">-</span><span class="content">${escHtml(g.left)}</span></div>`;
+    } else if (g.type === 'add') {
+      html += `<div class="diff-line add"><span class="ln"></span><span class="ln">${g.lnR}</span><span class="prefix">+</span><span class="content">${escHtml(g.right)}</span></div>`;
+    }
+  }
+  html += '</div>';
+  $diffBody.innerHTML = html;
+  $diffOutput.style.display = '';
+}
+
+function renderSbsChar(groups) {
+  let leftHtml = '', rightHtml = '';
+  for (const g of groups) {
+    if (g.type === 'ctx') {
+      leftHtml += `<div class="sbs-line ctx"><span class="ln">${g.lnL}</span><span class="content">${escHtml(g.left)}</span></div>`;
+      rightHtml += `<div class="sbs-line ctx"><span class="ln">${g.lnR}</span><span class="content">${escHtml(g.right)}</span></div>`;
+    } else if (g.type === 'mod') {
+      const aChars = Array.from(g.left), bChars = Array.from(g.right);
+      const cOps = lcs(aChars, bChars);
+      let oldH = '', newH = '';
+      for (const op of cOps) {
+        if (op.type === 'eq') { oldH += escHtml(op.left); newH += escHtml(op.right); }
+        else if (op.type === 'del') { oldH += '<span class="highlight-del">' + escHtml(op.val) + '</span>'; }
+        else if (op.type === 'add') { newH += '<span class="highlight-add">' + escHtml(op.val) + '</span>'; }
+      }
+      leftHtml += `<div class="sbs-line mod"><span class="ln">${g.lnL}</span><span class="content">${oldH}</span></div>`;
+      rightHtml += `<div class="sbs-line mod"><span class="ln">${g.lnR}</span><span class="content">${newH}</span></div>`;
+    } else if (g.type === 'del') {
+      leftHtml += `<div class="sbs-line del"><span class="ln">${g.lnL}</span><span class="content">${escHtml(g.left)}</span></div>`;
+      rightHtml += `<div class="sbs-line empty"><span class="ln"></span><span class="content"></span></div>`;
+    } else if (g.type === 'add') {
+      leftHtml += `<div class="sbs-line empty"><span class="ln"></span><span class="content"></span></div>`;
+      rightHtml += `<div class="sbs-line add"><span class="ln">${g.lnR}</span><span class="content">${escHtml(g.right)}</span></div>`;
+    }
+  }
+  $diffBody.innerHTML = `<div class="sbs-grid"><div class="sbs-panel">${leftHtml}</div><div class="sbs-panel">${rightHtml}</div></div>`;
+  $diffOutput.style.display = '';
+}
+
+// ─── UI helpers ───
+function showStats(add, del, chg, total) {
+  document.getElementById('stat-add').textContent = add;
+  document.getElementById('stat-del').textContent = del;
+  document.getElementById('stat-chg').textContent = chg;
+  document.getElementById('stat-total').textContent = total;
+  $statsBar.style.display = '';
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  if (lastDiffResult) runDiff();
+}
+
+function setView(view) {
+  currentView = view;
+  document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  if (lastDiffResult) runDiff();
+}
+
+function swapInputs() {
+  const tmp = $left.value;
+  $left.value = $right.value;
+  $right.value = tmp;
+  if (lastDiffResult) runDiff();
+}
+
+function clearAll() {
+  $left.value = '';
+  $right.value = '';
+  $diffBody.innerHTML = '';
+  $diffOutput.style.display = 'none';
+  $statsBar.style.display = 'none';
+  lastDiffResult = null;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function copyDiff() {
+  const text = buildDiffText();
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard'));
+}
+
+function exportDiff() {
+  const text = buildDiffTxt();
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'diff-result.diff';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('Exported diff-result.diff');
+}
+
+function buildDiffTxt() {
+  if (!lastDiffResult) return '';
+  let out = '--- Original\n+++ Modified\n';
+  for (const g of lastDiffResult) {
+    if (g.type === 'ctx') out += ' ' + g.left + '\n';
+    else if (g.type === 'del') out += '-' + g.left + '\n';
+    else if (g.type === 'add') out += '+' + g.right + '\n';
+    else if (g.type === 'mod') { out += '-' + g.left + '\n'; out += '+' + g.right + '\n'; }
+  }
+  return out;
+}
+
+// Build a plain-text representation of the rendered diff
+function buildDiffText() {
+  if (!lastDiffResult) return '';
+  let out = '';
+  for (const g of lastDiffResult) {
+    if (g.type === 'ctx') out += '  ' + g.left + '\n';
+    else if (g.type === 'del') out += '- ' + g.left + '\n';
+    else if (g.type === 'add') out += '+ ' + g.right + '\n';
+    else if (g.type === 'mod') { out += '- ' + g.left + '\n'; out += '+ ' + g.right + '\n'; }
+  }
+  return out;
+}
+
+// ─── File loading ───
+function setupFileDrop(col, textarea, fileInput) {
+  col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('dragover'); });
+  col.addEventListener('dragleave', () => col.classList.remove('dragover'));
+  col.addEventListener('drop', e => {
+    e.preventDefault(); col.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) readFile(file, textarea);
+  });
+  // Click textarea label area to trigger file input
+  col.querySelector('label').style.cursor = 'pointer';
+  col.querySelector('label').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) readFile(fileInput.files[0], textarea);
+    fileInput.value = '';
+  });
+}
+
+function readFile(file, textarea) {
+  const reader = new FileReader();
+  reader.onload = () => { textarea.value = reader.result; };
+  reader.readAsText(file);
+}
+
+setupFileDrop(document.getElementById('col-left'), $left, document.getElementById('file-left'));
+setupFileDrop(document.getElementById('col-right'), $right, document.getElementById('file-right'));
+
+// Keyboard shortcut: Ctrl/Cmd+Enter to compare
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runDiff(); }
+});
+</script>
+</body>
+</html>
